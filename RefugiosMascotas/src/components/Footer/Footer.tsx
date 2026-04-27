@@ -1,4 +1,5 @@
 import "./Footer.css";
+import AdoptaMe_logo from "../../assets/AdoptaMe_Logo.png";
 
 const platformLinks = [
   "Adoptar",
@@ -21,31 +22,12 @@ export default function Footer() {
       <div className="container">
         <div className="footer__top">
           <div className="footer__brand">
-            <a href="#" className="footer__logo" aria-label="Huella — Inicio">
-              <svg
-                width="30"
-                height="30"
-                viewBox="0 0 40 40"
-                fill="none"
-                aria-hidden="true"
-              >
-                <circle cx="20" cy="25" r="10" fill="#2D5A3D" />
-                <circle cx="13" cy="13" r="4.5" fill="#2D5A3D" />
-                <circle cx="27" cy="13" r="4.5" fill="#2D5A3D" />
-                <circle cx="8" cy="21" r="3.5" fill="#D4783A" />
-                <circle cx="32" cy="21" r="3.5" fill="#D4783A" />
-                <ellipse
-                  cx="20"
-                  cy="27"
-                  rx="6"
-                  ry="5"
-                  fill="#D4783A"
-                  opacity=".75"
-                />
-              </svg>
-              <span className="footer__logo-text">
-                Hue<span>lla</span>
-              </span>
+            <a href="#" className="footer__logo" aria-label="AdoptaMe — Inicio">
+              <img
+                src={AdoptaMe_logo}
+                alt="AdoptaMe"
+                className="footer__logo-img"
+              />
             </a>
             <p className="footer__desc">
               Conectamos refugios, voluntarios y familias para que ninguna

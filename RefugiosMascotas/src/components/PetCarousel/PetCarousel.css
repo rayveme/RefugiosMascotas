@@ -86,7 +86,7 @@
   font-weight: 600;
   letter-spacing: .08em;
   text-transform: uppercase;
-  background: rgba(200, 50, 35, .88);
+  background: var(--crimson);
   color: #fff;
 }
 
@@ -142,18 +142,22 @@
 .btn-adopt {
   width: 100%;
   padding: 12px;
-  background: var(--forest-deep);
-  color: var(--cream);
+  background: var(--olive-brand);
+  color: var(--text-dark);
   border: none;
   border-radius: var(--radius-md);
   font-family: 'DM Sans', sans-serif;
   font-size: .875rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: background .18s ease, transform .18s ease;
+  transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
 }
 
-.btn-adopt:hover { background: var(--forest-mid); transform: translateY(-1px); }
+.btn-adopt:hover {
+  background: var(--amber-light);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(171, 195, 57, .4);
+}
 
 /* Controls */
 .carousel-controls {
