@@ -234,3 +234,55 @@
     grid-template-columns: 1fr;
   }
 }
+/* ─── Pegar al final de Refugios.css ──────────────────────────────────────────
+   Solo estas reglas nuevas; el resto del archivo no cambia.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Header: texto a la izq, botón alineado al fondo a la derecha */
+.refugios-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+/* Botón "Registra tu refugio" */
+.btn-register-refugio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 14px 28px;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--cream);
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  margin-bottom: 0.2rem;         /* alinea visualmente con el párrafo */
+  transition: all 0.2s ease;
+}
+
+.btn-register-refugio:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.65);
+  transform: translateY(-2px);
+}
+
+.btn-register-refugio:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .refugios-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+  .btn-register-refugio {
+    margin-bottom: 0;
+  }
+}

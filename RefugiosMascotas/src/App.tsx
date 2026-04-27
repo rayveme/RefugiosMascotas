@@ -12,6 +12,8 @@ import Footer from './components/Footer/Footer';
 import AuthModal from './components/auth/AuthModal/AuthModal';
 import PetForm from './components/forms/PetForm/PetForm';
 import ProfileEditModal from './components/forms/ProfileEditModal/ProfileEditModal';
+import RegistroRefugio from './components/Registrorefugio/Registrorefugio';
+import DashboardRefugio from './components/DashboardRefugio/Dashboardrefugio';
 import { useConfirm } from './components/ui/ConfirmDialog/ConfirmDialog';
 import HomePage from './pages/HomePage';
 import FoundationsPage from './pages/FoundationsPage';
@@ -147,6 +149,8 @@ export default function App() {
             <Route path="/refugios/:id" element={<FoundationDetailPage />} />
             <Route path="/solicitudes" element={<RequestsPage />} />
             <Route path="/admin" element={<AdminPage />} />
+            <Route path="/registrar-refugio" element={<RegistroRefugio />} />
+            <Route path="/dashboard" element={<DashboardRefugio />} />
             <Route path="/auth/callback" element={<AuthCallbackPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
