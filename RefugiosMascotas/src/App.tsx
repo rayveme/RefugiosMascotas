@@ -8,6 +8,7 @@ import Donation        from './components/Donation/Donation';
 import CitaCTA         from './components/CitaCTA/CitaCTA';
 import Footer          from './components/Footer/Footer';
 import RegistroRefugio from './components/RegistroRefugio/RegistroRefugio';
+import DashboardRefugio from './components/DashboardRefugio/Dashboardrefugio';
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
 
       {/* ── Formulario de registro ── */}
       <Route path="/registrar-refugio" element={<RegistroRefugio />} />
+      <Route path="/dashboard" element={<DashboardRefugio />} />
 
     </Routes>
   );
