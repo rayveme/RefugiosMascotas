@@ -1,6 +1,9 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useReveal } from '../../hooks/useReveal';
-import { pets } from '../../data/pets';
+import { useAuth } from '../../hooks/useAuth';
+import { petsApi } from '../../api/pets';
+import { extractApiError } from '../../api/client';
+import { pets as fallbackPets } from '../../data/pets';
 import type { Pet } from '../../types';
 import './PetCarousel.css';
 
@@ -28,7 +31,14 @@ const CatIllo = () => (
   </svg>
 );
 
-function PetCard({ pet }: { pet: Pet }) {
+interface PetCardProps {
+  pet: Pet;
+  onAdopt: (pet: Pet) => void;
+  adopting: boolean;
+  disabled?: boolean;
+}
+
+function PetCard({ pet, onAdopt, adopting, disabled }: PetCardProps) {
   return (
     <article className="pet-card" role="listitem">
       <div className="pet-card__img">
@@ -68,8 +78,14 @@ function PetCard({ pet }: { pet: Pet }) {
           <span className="pet-card__shelter-name">{pet.shelter} · {pet.city}</span>
         </div>
 
-        <button className="btn-adopt" aria-label={`Adoptar a ${pet.name}`}>
-          Quiero adoptar
+        <button
+          className="btn-adopt"
+          onClick={() => onAdopt(pet)}
+          disabled={adopting || disabled}
+          aria-label={`Adoptar a ${pet.name}`}
+          title={disabled ? 'Mascota de muestra — registra mascotas reales para adoptar' : undefined}
+        >
+          {adopting ? 'Procesando…' : disabled ? 'Demo' : 'Quiero adoptar'}
         </button>
       </div>
     </article>
@@ -78,9 +94,69 @@ function PetCard({ pet }: { pet: Pet }) {
 
 const CARD_W = 272 + 22;
 
-export default function PetCarousel() {
+interface Props {
+  onRequireAuth: () => void;
+  onRequireProfile: (message: string) => void;
+  refreshKey?: number;
+}
+
+export default function PetCarousel({ onRequireAuth, onRequireProfile, refreshKey }: Props) {
   const trackRef  = useRef<HTMLDivElement>(null);
   const sectionRef = useReveal<HTMLElement>();
+  const headerRef  = useReveal<HTMLDivElement>();
+  const controlRef = useReveal<HTMLDivElement>();
+
+  const { user } = useAuth();
+
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [usingFallback, setUsingFallback] = useState(false);
+  const [adoptingId, setAdoptingId] = useState<number | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    petsApi
+      .list()
+      .then((data) => {
+        if (!alive) return;
+        if (data.length === 0) {
+          setPets(fallbackPets);
+          setUsingFallback(true);
+        } else {
+          setPets(data);
+          setUsingFallback(false);
+        }
+      })
+      .catch(() => {
+        if (!alive) return;
+        setPets(fallbackPets);
+        setUsingFallback(true);
+      })
+      .finally(() => alive && setLoading(false));
+    return () => { alive = false; };
+  }, [refreshKey]);
+
+  const onAdopt = async (pet: Pet) => {
+    if (!user) { onRequireAuth(); return; }
+    if (user.role !== 'adopter') {
+      onRequireProfile('Esta acción es solo para usuarios adoptantes.');
+      return;
+    }
+    if (!user.profile.profileComplete) {
+      onRequireProfile('Completa ciudad y teléfono en tu perfil para poder adoptar.');
+      return;
+    }
+    setAdoptingId(pet.id);
+    try {
+      await petsApi.adopt(pet.id);
+      setPets((cur) => cur.filter((p) => p.id !== pet.id));
+    } catch (err) {
+      onRequireProfile(extractApiError(err, 'No pudimos completar la adopción.'));
+    } finally {
+      setAdoptingId(null);
+    }
+  };
 
   const isDragging = useRef(false);
   const startX     = useRef(0);
@@ -119,9 +195,6 @@ export default function PetCarousel() {
     trackRef.current?.scrollBy({ left: dir * CARD_W * 2, behavior: 'smooth' });
   };
 
-  const headerRef  = useReveal<HTMLDivElement>();
-  const controlRef = useReveal<HTMLDivElement>();
-
   return (
     <section className="section-adopt" id="adoptar" ref={sectionRef} aria-labelledby="adopt-title">
       <div className="container">
@@ -139,6 +212,12 @@ export default function PetCarousel() {
           <a href="#" className="btn btn--ghost-dark">Ver todos</a>
         </div>
 
+        {usingFallback && !loading && (
+          <p className="pet-fallback-note">
+            Mostrando mascotas de ejemplo — el back no está disponible o aún no hay registros.
+          </p>
+        )}
+
         <div className="carousel-wrap">
           <div
             className="carousel-track"
@@ -152,7 +231,26 @@ export default function PetCarousel() {
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
           >
-            {pets.map(pet => <PetCard key={pet.id} pet={pet} />)}
+            {loading
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="pet-card pet-card--skeleton" aria-hidden="true">
+                    <div className="pet-card__img skeleton-bg" />
+                    <div className="pet-card__body">
+                      <div className="skeleton-line skeleton-line--lg" />
+                      <div className="skeleton-line skeleton-line--md" />
+                      <div className="skeleton-line skeleton-line--sm" />
+                    </div>
+                  </div>
+                ))
+              : pets.map((pet) => (
+                  <PetCard
+                    key={pet.id}
+                    pet={pet}
+                    onAdopt={onAdopt}
+                    adopting={adoptingId === pet.id}
+                    disabled={usingFallback}
+                  />
+                ))}
           </div>
         </div>
 

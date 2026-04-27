@@ -83,12 +83,175 @@
 .navbar.scrolled .navbar__links a:hover { color: var(--forest); }
 .navbar__links a:hover::after { width: 100%; }
 
+/* Auth/CTA cluster */
+.navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
 /* CTA button */
 .navbar__cta {
   padding: 11px 22px;
   font-size: .85rem;
   flex-shrink: 0;
 }
+
+.navbar__login {
+  background: transparent;
+  border: none;
+  color: rgba(250, 243, 228, 0.85);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 11px 4px;
+  transition: color 0.18s ease;
+}
+
+.navbar.scrolled .navbar__login { color: var(--text-mid); }
+.navbar__login:hover { color: var(--amber-light); }
+.navbar.scrolled .navbar__login:hover { color: var(--forest); }
+
+/* User menu */
+.user-menu {
+  position: relative;
+}
+
+.user-menu__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: rgba(250, 243, 228, 0.12);
+  border: 1px solid rgba(250, 243, 228, 0.18);
+  color: var(--cream);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 6px 14px 6px 6px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.navbar.scrolled .user-menu__trigger {
+  background: rgba(21, 42, 30, 0.06);
+  border-color: rgba(21, 42, 30, 0.12);
+  color: var(--forest-deep);
+}
+
+.user-menu__trigger:hover {
+  background: rgba(250, 243, 228, 0.22);
+}
+
+.navbar.scrolled .user-menu__trigger:hover {
+  background: rgba(21, 42, 30, 0.1);
+}
+
+.user-menu__avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--amber), var(--amber-light));
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.user-menu__name {
+  max-width: 130px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-menu__dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 240px;
+  background: #fff;
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 40px rgba(24, 12, 4, 0.18);
+  padding: 8px;
+  z-index: 100;
+  animation: dropdown-rise 0.16s ease-out;
+}
+
+@keyframes dropdown-rise {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.user-menu__header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px 12px;
+  border-bottom: 1px solid var(--cream-dark);
+  margin-bottom: 6px;
+}
+
+.user-menu__header strong {
+  font-size: 0.92rem;
+  color: var(--forest-deep);
+}
+
+.user-menu__header span {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.user-menu__warning {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 14px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--amber);
+  background: rgba(212, 120, 58, 0.1);
+  border: none;
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.18s ease;
+}
+
+.user-menu__warning:hover { background: rgba(212, 120, 58, 0.18); }
+
+.user-menu__item--link {
+  text-decoration: none;
+  color: var(--text-dark);
+}
+
+.user-menu__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 10px 14px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: var(--text-dark);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s ease;
+}
+
+.user-menu__item:hover { background: rgba(21, 42, 30, 0.05); }
+
+.user-menu__item--danger { color: #c4453a; }
+.user-menu__item--danger:hover { background: rgba(196, 69, 58, 0.08); }
 
 /* Mobile toggle */
 .navbar__toggle {
@@ -133,5 +296,7 @@
 
   .navbar__links.open { display: flex; }
   .navbar__links a { color: var(--text-mid); }
-  .navbar__cta { display: none; }
+  .navbar__login { display: none; }
+  .user-menu__name { display: none; }
+  .navbar__cta { padding: 8px 14px; font-size: 0.8rem; }
 }

@@ -1,0 +1,145 @@
+.pet-form__layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 28px;
+  align-items: start;
+}
+
+@media (max-width: 760px) {
+  .pet-form__layout { grid-template-columns: 1fr; }
+}
+
+.pet-form__chips,
+.pet-form__palette {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.pet-form__chips legend,
+.pet-form__palette legend {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--forest-deep);
+  margin-bottom: 8px;
+  padding: 0;
+}
+
+.pet-form__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pet-form__chips legend { width: 100%; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border: 1.5px solid var(--cream-dark);
+  border-radius: var(--radius-full);
+  background: #fff;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.chip input { display: none; }
+
+.chip:hover { border-color: var(--text-muted); }
+
+.chip--on {
+  background: var(--forest);
+  color: var(--cream);
+  border-color: var(--forest);
+}
+
+.chip--urgent.chip--on {
+  background: var(--amber);
+  border-color: var(--amber);
+}
+
+.palette-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.palette-swatch {
+  height: 38px;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.palette-swatch:hover { transform: scale(1.05); }
+
+.palette-swatch--on {
+  outline: 3px solid var(--forest-deep);
+  outline-offset: 2px;
+}
+
+@media (max-width: 540px) {
+  .palette-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Preview card (mini) */
+.pet-form__preview {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pet-form__preview-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+
+.pet-card--preview {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+}
+
+.pet-card--preview .pet-card__img { height: 180px; position: relative; }
+.pet-card--preview .pet-card__img-bg { width: 100%; height: 100%; }
+.pet-card--preview .pet-card__badge {
+  position: absolute; top: 12px; left: 12px;
+  padding: 4px 12px; border-radius: var(--radius-full);
+  font-size: 0.66rem; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: #fff;
+}
+.pet-card--preview .pet-card__badge--dog { background: rgba(212, 120, 58, 0.9); }
+.pet-card--preview .pet-card__badge--cat { background: rgba(45, 90, 61, 0.9); }
+.pet-card--preview .pet-card__urgent {
+  position: absolute; top: 12px; right: 12px;
+  padding: 4px 10px; border-radius: var(--radius-full);
+  font-size: 0.66rem; font-weight: 700; color: #fff;
+  background: #c4453a; letter-spacing: 0.06em;
+}
+.pet-card--preview .pet-card__body { padding: 16px 18px 18px; }
+.pet-card--preview .pet-card__name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem; color: var(--forest-deep); margin-bottom: 2px;
+}
+.pet-card--preview .pet-card__breed { font-size: 0.82rem; color: var(--text-muted); }
+.pet-card--preview .pet-card__shelter {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 10px; font-size: 0.78rem; color: var(--text-mid);
+}
+.pet-card--preview .pet-card__shelter-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--amber);
+}
