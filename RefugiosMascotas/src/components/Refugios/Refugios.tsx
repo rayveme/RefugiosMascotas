@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useReveal } from '../../hooks/useReveal';
 import { refugios } from '../../data/refugios';
 import type { Refugio } from '../../types';
@@ -59,7 +60,8 @@ export default function Refugios() {
       <div className="r-blob r-blob--2" aria-hidden="true" />
 
       <div className="container">
-        <div className="section-header reveal" ref={headerRef} style={{ marginBottom: '60px' }}>
+        {/* ─ única diferencia: flex row con el botón a la derecha ─ */}
+        <div className="section-header refugios-header reveal" ref={headerRef} style={{ marginBottom: '60px' }}>
           <div>
             <div className="eyebrow">
               <span className="eyebrow__line" aria-hidden="true" />
@@ -72,6 +74,14 @@ export default function Refugios() {
               Organizaciones dedicadas al bienestar animal que trabajan cada día para ofrecer una vida mejor a quienes más lo necesitan.
             </p>
           </div>
+
+          {/* ── botón nuevo ── */}
+          <Link to="/registrar-refugio" className="btn-register-refugio">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Registra tu refugio
+          </Link>
         </div>
 
         <div className="refugios-grid">
