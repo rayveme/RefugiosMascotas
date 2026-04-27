@@ -7,32 +7,58 @@
    DESIGN TOKENS
 ============================================================ */
 :root {
-  --forest-deep:  #152A1E;
-  --forest:       #1E3D2A;
-  --forest-mid:   #2D5A3D;
-  --forest-light: #4A7A5A;
+  /* === Olive — Primary brand === */
+  --olive-deep:   #1A2205;
+  --olive:        #2E3D0A;
+  --olive-mid:    #4A6310;
+  --olive-light:  #6B8A28;
 
-  --amber:        #D4783A;
-  --amber-light:  #E8954A;
-  --amber-pale:   #F5C48A;
+  /* Backwards-compat aliases used by components */
+  --forest-deep:  var(--olive-deep);
+  --forest:       var(--olive);
+  --forest-mid:   var(--olive-mid);
+  --forest-light: var(--olive-light);
 
-  --cream:        #FAF3E4;
-  --cream-mid:    #F2E6CE;
-  --cream-dark:   #E6D6B8;
+  /* === Sky — Trust / Refugios === */
+  --sky-deep: #06293A;
+  --sky:      #30bdd6;
+  --sky-light:#6fd8ec;
 
-  --text-dark:    #180C04;
-  --text-mid:     #4A3020;
-  --text-muted:   #8A6A50;
+  /* === Brand palette === */
+  --olive-brand:  #abc339;   /* primary CTA bg */
+  --coral:        #ff8585;   /* donation / love */
+  --coral-dark:   #e06868;
+  --gold:         #e09806;   /* stats / highlights */
+  --crimson:      #e03750;   /* urgente badges */
+  --mauve:        #d9b9cc;   /* soft sections */
+  --mauve-light:  #f5eef3;
 
+  /* Legacy amber → now olive-brand */
+  --amber:        var(--olive-brand);
+  --amber-light:  #c2d94a;
+  --amber-pale:   #dff08a;
+
+  /* === Surfaces === */
+  --cream:        #FAF9F5;
+  --cream-mid:    #F0EDE6;
+  --cream-dark:   #E4DDD2;
+
+  /* === Text === */
+  --text-dark:    #1A1F05;
+  --text-mid:     #3A4618;
+  --text-muted:   #7A8855;
+
+  /* === Radii === */
   --radius-sm:   8px;
   --radius-md:   16px;
   --radius-lg:   24px;
   --radius-xl:   40px;
   --radius-full: 9999px;
 
-  --shadow-soft:  0 4px 24px rgba(24, 12, 4, .07);
-  --shadow-card:  0 8px 40px rgba(24, 12, 4, .11);
-  --shadow-hover: 0 20px 60px rgba(24, 12, 4, .16);
+  /* === Shadows === */
+  --shadow-soft:  0 4px 24px rgba(26, 34, 5, .08);
+  --shadow-card:  0 8px 40px rgba(26, 34, 5, .12);
+  --shadow-hover: 0 20px 60px rgba(26, 34, 5, .18);
 
   --nav-height: 76px;
 }
@@ -172,15 +198,15 @@ h1, h2, h3 { margin: 0; }
 
 .btn--amber {
   padding: 13px 26px;
-  background: var(--amber);
-  color: #fff;
+  background: var(--olive-brand);
+  color: var(--text-dark);
   font-size: .875rem;
 }
 
 .btn--amber:hover {
   background: var(--amber-light);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(212, 120, 58, .38);
+  box-shadow: 0 8px 24px rgba(171, 195, 57, .45);
 }
 
 .btn--ghost-light {

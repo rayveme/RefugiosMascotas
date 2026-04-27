@@ -50,7 +50,7 @@
   font-family: 'Playfair Display', serif;
   font-size: 2rem;
   font-weight: 700;
-  color: var(--forest);
+  color: var(--olive-brand);
 }
 
 .impact-item__lbl {
@@ -137,9 +137,10 @@
 .amount-btn:hover { border-color: var(--forest-light); color: var(--forest); }
 
 .amount-btn.active {
-  background: var(--forest-deep);
-  border-color: var(--forest-deep);
-  color: var(--cream);
+  background: var(--olive-brand);
+  border-color: var(--olive-brand);
+  color: var(--text-dark);
+  font-weight: 700;
 }
 
 .amount-custom {
@@ -162,8 +163,8 @@
 
 /* Impact preview */
 .impact-preview {
-  background: linear-gradient(135deg, rgba(30, 61, 42, .05) 0%, rgba(212, 120, 58, .05) 100%);
-  border: 1px solid rgba(30, 61, 42, .1);
+  background: linear-gradient(135deg, rgba(171, 195, 57, .07) 0%, rgba(255, 133, 133, .06) 100%);
+  border: 1px solid rgba(171, 195, 57, .2);
   border-radius: var(--radius-md);
   padding: 16px;
   margin: 16px 0 22px;
@@ -180,7 +181,7 @@
 
 .impact-preview__text {
   font-size: .85rem;
-  color: var(--forest);
+  color: var(--olive-mid);
   font-weight: 500;
   line-height: 1.55;
   margin: 0;
@@ -190,7 +191,7 @@
 .btn-donate {
   width: 100%;
   padding: 16px 24px;
-  background: linear-gradient(135deg, var(--amber) 0%, var(--amber-light) 100%);
+  background: linear-gradient(135deg, var(--coral) 0%, var(--gold) 100%);
   color: #fff;
   border: none;
   border-radius: var(--radius-md);
@@ -204,7 +205,7 @@
 
 .btn-donate:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(212, 120, 58, .4);
+  box-shadow: 0 8px 28px rgba(255, 133, 133, .45);
 }
 
 .donate-note {

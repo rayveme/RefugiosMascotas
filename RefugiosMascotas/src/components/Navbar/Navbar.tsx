@@ -1,18 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import AdoptaMe_logo from '../../assets/AdoptaMe_Logo.png';
 import './Navbar.css';
-
-const PawIcon = () => (
-  <svg width="34" height="34" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-    <circle cx="20" cy="25" r="10" fill="#2D5A3D" />
-    <circle cx="13" cy="13" r="4.5" fill="#2D5A3D" />
-    <circle cx="27" cy="13" r="4.5" fill="#2D5A3D" />
-    <circle cx="8"  cy="21" r="3.5" fill="#D4783A" />
-    <circle cx="32" cy="21" r="3.5" fill="#D4783A" />
-    <ellipse cx="20" cy="27" rx="6" ry="5" fill="#D4783A" opacity=".75" />
-  </svg>
-);
 
 interface Props {
   onLoginClick: () => void;
@@ -34,7 +24,6 @@ export default function Navbar({
   const { user, logout } = useAuth();
   const location = useLocation();
 
-  // En páginas que no son home, el navbar arranca con fondo (no transparente).
   const onHome = location.pathname === '/';
 
   useEffect(() => {
@@ -66,14 +55,13 @@ export default function Navbar({
 
   return (
     <nav
-      className={`navbar${(scrolled || !onHome) ? ' scrolled' : ''}`}
+      className={`navbar${scrolled ? ' scrolled' : ''}`}
       role="navigation"
       aria-label="Navegación principal"
     >
       <div className="navbar__inner">
-        <Link to="/" className="navbar__logo" aria-label="Huella — Inicio">
-          <PawIcon />
-          <span className="navbar__logo-text">Hue<span>lla</span></span>
+        <Link to="/" className="navbar__logo" aria-label="AdoptaMe — Inicio">
+          <img src={AdoptaMe_logo} alt="AdoptaMe" className="navbar__logo-img" />
         </Link>
 
         <ul className={`navbar__links${menuOpen ? ' open' : ''}`} id="navLinks">
@@ -81,10 +69,10 @@ export default function Navbar({
             <NavLink to="/refugios" onClick={closeMenu}>Refugios</NavLink>
           </li>
           <li>
-            <a href={onHome ? '#adoptar' : '/#adoptar'} onClick={closeMenu}>Adoptar</a>
+            <a href={onHome ? '#adoptar' : '/#adoptar'} onClick={closeMenu}>Adopta</a>
           </li>
           <li>
-            <a href={onHome ? '#donar' : '/#donar'} onClick={closeMenu}>Donar</a>
+            <a href={onHome ? '#donar' : '/#donar'} onClick={closeMenu}>Dona</a>
           </li>
           <li>
             <a href={onHome ? '#cita' : '/#cita'} onClick={closeMenu}>Agendar Cita</a>
@@ -181,9 +169,11 @@ export default function Navbar({
           aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
           aria-expanded={menuOpen}
           aria-controls="navLinks"
-          onClick={() => setMenuOpen(o => !o)}
+          onClick={() => setMenuOpen((o) => !o)}
         >
-          <span /><span /><span />
+          <span />
+          <span />
+          <span />
         </button>
       </div>
     </nav>

@@ -1,3 +1,4 @@
+/* Navbar — siempre con fondo fijo, sin transparente */
 .navbar {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -5,14 +6,14 @@
   height: var(--nav-height);
   display: flex;
   align-items: center;
-  transition: background .3s ease, box-shadow .3s ease, backdrop-filter .3s ease;
+  background: #30bdd6;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, .12);
 }
 
 .navbar.scrolled {
-  background: rgba(250, 243, 228, 0.92);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  box-shadow: 0 1px 0 rgba(24, 12, 4, .07), 0 4px 24px rgba(24, 12, 4, .05);
+  box-shadow: 0 2px 28px rgba(0, 0, 0, .18);
 }
 
 .navbar__inner {
@@ -26,28 +27,21 @@
   gap: 24px;
 }
 
-/* Logo */
+/* Logo image */
 .navbar__logo {
   display: flex;
   align-items: center;
-  gap: 10px;
   text-decoration: none;
   flex-shrink: 0;
 }
 
-.navbar__logo-text {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--cream);
-  transition: color .2s ease;
+.navbar__logo-img {
+  height: 75px;
+  width: auto;
+  object-fit: contain;
 }
 
-.navbar__logo-text span { color: var(--amber); }
-
-.navbar.scrolled .navbar__logo-text { color: var(--forest-deep); }
-
-/* Links */
+/* Links — texto blanco sobre sky blue */
 .navbar__links {
   display: flex;
   align-items: center;
@@ -59,28 +53,26 @@
 
 .navbar__links a {
   font-size: .875rem;
-  font-weight: 500;
-  color: rgba(250, 243, 228, .75);
+  font-weight: 600;
+  color: #fff;
   letter-spacing: .04em;
   text-decoration: none;
   position: relative;
-  transition: color .18s ease;
+  transition: color .18s ease, opacity .18s ease;
 }
 
-.navbar.scrolled .navbar__links a { color: var(--text-mid); }
+.navbar__links a:hover { opacity: .8; }
 
 .navbar__links a::after {
   content: '';
   position: absolute;
   bottom: -4px; left: 0;
   width: 0; height: 2px;
-  background: var(--amber);
+  background: #fff;
   border-radius: 2px;
   transition: width .28s cubic-bezier(.22, 1, .36, 1);
 }
 
-.navbar__links a:hover { color: var(--amber-light); }
-.navbar.scrolled .navbar__links a:hover { color: var(--forest); }
 .navbar__links a:hover::after { width: 100%; }
 
 /* Auth/CTA cluster */
@@ -91,28 +83,36 @@
   flex-shrink: 0;
 }
 
-/* CTA button */
+/* CTA button (publicar/crear cuenta): blanco con texto sky blue */
 .navbar__cta {
   padding: 11px 22px;
   font-size: .85rem;
   flex-shrink: 0;
+  background: #fff !important;
+  color: #30bdd6 !important;
+  font-weight: 700;
 }
 
+.navbar__cta:hover {
+  background: var(--gold, #e09806) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 20px rgba(224, 152, 6, .4) !important;
+}
+
+/* Botón "Iniciar sesión" — texto blanco sobre el sky */
 .navbar__login {
   background: transparent;
   border: none;
-  color: rgba(250, 243, 228, 0.85);
+  color: #fff;
   font-family: inherit;
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
   padding: 11px 4px;
-  transition: color 0.18s ease;
+  transition: opacity 0.18s ease;
 }
 
-.navbar.scrolled .navbar__login { color: var(--text-mid); }
-.navbar__login:hover { color: var(--amber-light); }
-.navbar.scrolled .navbar__login:hover { color: var(--forest); }
+.navbar__login:hover { opacity: .8; }
 
 /* User menu */
 .user-menu {
@@ -123,30 +123,20 @@
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  background: rgba(250, 243, 228, 0.12);
-  border: 1px solid rgba(250, 243, 228, 0.18);
-  color: var(--cream);
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
   font-family: inherit;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   padding: 6px 14px 6px 6px;
   border-radius: var(--radius-full);
   cursor: pointer;
   transition: all 0.18s ease;
 }
 
-.navbar.scrolled .user-menu__trigger {
-  background: rgba(21, 42, 30, 0.06);
-  border-color: rgba(21, 42, 30, 0.12);
-  color: var(--forest-deep);
-}
-
 .user-menu__trigger:hover {
-  background: rgba(250, 243, 228, 0.22);
-}
-
-.navbar.scrolled .user-menu__trigger:hover {
-  background: rgba(21, 42, 30, 0.1);
+  background: rgba(255, 255, 255, 0.28);
 }
 
 .user-menu__avatar {
@@ -156,7 +146,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--amber), var(--amber-light));
+  background: linear-gradient(135deg, var(--gold, #e09806), #f5b342);
   color: #fff;
   font-weight: 700;
   font-size: 0.85rem;
@@ -198,7 +188,7 @@
 
 .user-menu__header strong {
   font-size: 0.92rem;
-  color: var(--forest-deep);
+  color: var(--forest-deep, #152A1E);
 }
 
 .user-menu__header span {
@@ -216,8 +206,8 @@
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: 500;
-  color: var(--amber);
-  background: rgba(212, 120, 58, 0.1);
+  color: var(--gold, #e09806);
+  background: rgba(224, 152, 6, 0.1);
   border: none;
   border-radius: var(--radius-sm);
   margin-bottom: 6px;
@@ -226,7 +216,7 @@
   transition: background 0.18s ease;
 }
 
-.user-menu__warning:hover { background: rgba(212, 120, 58, 0.18); }
+.user-menu__warning:hover { background: rgba(224, 152, 6, 0.2); }
 
 .user-menu__item--link {
   text-decoration: none;
@@ -248,7 +238,7 @@
   transition: background 0.15s ease;
 }
 
-.user-menu__item:hover { background: rgba(21, 42, 30, 0.05); }
+.user-menu__item:hover { background: rgba(48, 189, 214, 0.08); }
 
 .user-menu__item--danger { color: #c4453a; }
 .user-menu__item--danger:hover { background: rgba(196, 69, 58, 0.08); }
@@ -268,12 +258,9 @@
 .navbar__toggle span {
   display: block;
   width: 22px; height: 2px;
-  background: var(--cream);
+  background: #fff;
   border-radius: 2px;
-  transition: background .2s ease;
 }
-
-.navbar.scrolled .navbar__toggle span { background: var(--text-dark); }
 
 @media (max-width: 768px) {
   .navbar__inner { padding: 0 24px; }
@@ -287,15 +274,13 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 20px;
-    background: rgba(250, 243, 228, .97);
-    backdrop-filter: blur(16px);
+    background: #30bdd6;
     padding: 24px 40px 32px;
-    border-top: 1px solid rgba(24, 12, 4, .07);
-    box-shadow: 0 16px 40px rgba(24, 12, 4, .12);
+    border-top: 1px solid rgba(255, 255, 255, .2);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, .15);
   }
 
   .navbar__links.open { display: flex; }
-  .navbar__links a { color: var(--text-mid); }
   .navbar__login { display: none; }
   .user-menu__name { display: none; }
   .navbar__cta { padding: 8px 14px; font-size: 0.8rem; }
