@@ -138,8 +138,11 @@ export default function RegistroRefugio() {
 
   const next  = () => { if (validate()) setStep(s => Math.min(s + 1, 4) as Step); };
   const prev  = () => setStep(s => Math.max(s - 1, 1) as Step);
-  const submit = () => { if (validate()) setSubmitted(true); };
-
+const submit = () => {
+  if (validate()) {
+    navigate('/dashboard');  // o la ruta que hayas definido
+  }
+};
   // ── Success screen ──────────────────────────────────────────────────────────
   if (submitted) {
     return (
