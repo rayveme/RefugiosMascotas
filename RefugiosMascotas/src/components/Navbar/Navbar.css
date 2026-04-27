@@ -218,6 +218,21 @@
 
 .user-menu__warning:hover { background: rgba(224, 152, 6, 0.2); }
 
+/* Variantes informativa (pending) y peligro (rejected) — no son botones */
+.user-menu__warning--info {
+  color: #246e90;
+  background: rgba(48, 189, 214, 0.12);
+  cursor: default;
+}
+.user-menu__warning--info:hover { background: rgba(48, 189, 214, 0.18); }
+
+.user-menu__warning--danger {
+  color: #c4453a;
+  background: rgba(196, 69, 58, 0.1);
+  cursor: default;
+}
+.user-menu__warning--danger:hover { background: rgba(196, 69, 58, 0.18); }
+
 .user-menu__item--link {
   text-decoration: none;
   color: var(--text-dark);

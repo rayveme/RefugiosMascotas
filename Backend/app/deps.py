@@ -5,11 +5,11 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
-from app.models import Adopter, Foundation
+from app.models import Admin, Adopter, Foundation, FoundationStatus
 from app.schemas.auth import Role
 from app.security import decode_access_token
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/google/login", auto_error=True)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=True)
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 TokenDep = Annotated[str, Depends(oauth2_scheme)]
@@ -31,7 +31,7 @@ async def get_current_principal(token: TokenDep) -> tuple[int, Role]:
 
     sub = payload.get("sub")
     role = payload.get("role")
-    if sub is None or role not in ("adopter", "foundation"):
+    if sub is None or role not in ("adopter", "foundation", "admin"):
         raise _credentials_error("Token incompleto")
 
     try:
@@ -65,6 +65,37 @@ async def get_current_foundation(session: SessionDep, principal: PrincipalDep) -
 
 CurrentAdopter = Annotated[Adopter, Depends(get_current_adopter)]
 CurrentFoundation = Annotated[Foundation, Depends(get_current_foundation)]
+
+
+async def get_current_admin(session: SessionDep, principal: PrincipalDep) -> Admin:
+    user_id, role = principal
+    if role != "admin":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Se requiere usuario admin")
+    admin = await session.get(Admin, user_id)
+    if admin is None:
+        raise _credentials_error("Admin no encontrado")
+    return admin
+
+
+CurrentAdmin = Annotated[Admin, Depends(get_current_admin)]
+
+
+async def require_approved_foundation(foundation: CurrentFoundation) -> Foundation:
+    """Solo permite operar a fundaciones aprobadas por el admin."""
+    if foundation.status == FoundationStatus.PENDING:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tu cuenta de refugio está pendiente de aprobación por un administrador.",
+        )
+    if foundation.status == FoundationStatus.REJECTED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tu solicitud de refugio fue rechazada. Contacta al administrador.",
+        )
+    return foundation
+
+
+ApprovedFoundation = Annotated[Foundation, Depends(require_approved_foundation)]
 
 
 async def require_complete_adopter(adopter: CurrentAdopter) -> Adopter:

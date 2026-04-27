@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import func, or_, select
 
 from app.deps import CurrentFoundation, SessionDep
-from app.models import Foundation, Pet
+from app.models import Foundation, FoundationStatus, Pet
 from app.schemas.foundation import FoundationRead, FoundationUpdate
 
 router = APIRouter(prefix="/foundations", tags=["foundations"])
@@ -22,7 +22,8 @@ async def list_foundations(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
 ) -> list[FoundationRead]:
-    stmt = select(Foundation)
+    # Listado público: solo fundaciones aprobadas por el admin.
+    stmt = select(Foundation).where(Foundation.status == FoundationStatus.APPROVED)
     if search:
         like = f"%{search}%"
         stmt = stmt.where(or_(Foundation.name.ilike(like), Foundation.city.ilike(like)))

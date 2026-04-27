@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
+from app.models.foundation import FoundationStatus
+
 
 class FoundationBase(BaseModel):
     name: str = Field(..., min_length=2, max_length=120)
@@ -28,7 +30,7 @@ class FoundationUpdate(BaseModel):
     initial: str | None = Field(None, min_length=1, max_length=2)
     gradient_from: str | None = Field(None, pattern=r"^#[0-9A-Fa-f]{6,8}$")
     gradient_to: str | None = Field(None, pattern=r"^#[0-9A-Fa-f]{6,8}$")
-    adoptions: int | None = Field(None, ge=0)
+    # `adoptions` se actualiza solo desde el endpoint /pets/{id}/adopt — no exponer aquí.
 
 
 class FoundationRead(FoundationBase):
@@ -39,4 +41,5 @@ class FoundationRead(FoundationBase):
     adoptions: int
     animals: int = 0
     profile_complete: bool
+    status: FoundationStatus
     created_at: datetime

@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field
 
-Role = Literal["adopter", "foundation"]
+Role = Literal["adopter", "foundation", "admin"]
 
 
 class TokenPayload(BaseModel):

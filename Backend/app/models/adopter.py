@@ -1,7 +1,12 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.adoption_request import AdoptionRequest
 
 
 class Adopter(Base, TimestampMixin):
@@ -19,6 +24,12 @@ class Adopter(Base, TimestampMixin):
     avatar_url: Mapped[str | None] = mapped_column(String(500), default=None)
     city: Mapped[str | None] = mapped_column(String(80), default=None)
     phone: Mapped[str | None] = mapped_column(String(30), default=None)
+
+    adoption_requests: Mapped[list["AdoptionRequest"]] = relationship(
+        back_populates="adopter",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
 
     @property
     def profile_complete(self) -> bool:

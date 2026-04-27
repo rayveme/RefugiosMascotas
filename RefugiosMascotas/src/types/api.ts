@@ -1,7 +1,9 @@
 // Tipos espejo de la API (snake_case, tal como llegan del backend FastAPI).
 // La capa /api se encarga de traducirlos a los tipos UI cuando hace falta.
 
-export type Role = 'adopter' | 'foundation';
+export type Role = 'adopter' | 'foundation' | 'admin';
+
+export type FoundationStatusApi = 'pending' | 'approved' | 'rejected';
 
 export interface TokenResponse {
   access_token: string;
@@ -34,7 +36,21 @@ export interface FoundationApi {
   gradient_from: string;
   gradient_to: string;
   profile_complete: boolean;
+  status: FoundationStatusApi;
   created_at: string;
+}
+
+export interface AdminApi {
+  id: number;
+  email: string;
+  full_name: string;
+  created_at: string;
+}
+
+export interface AdminRegisterPayload {
+  email: string;
+  password: string;
+  full_name: string;
 }
 
 export type PetTypeApi = 'Perro' | 'Gato';
@@ -98,4 +114,41 @@ export interface LoginPayload {
 
 export interface ApiError {
   detail: string;
+}
+
+export type AdoptionStatusApi = 'pending' | 'approved' | 'rejected';
+
+export interface AdoptionRequestPetSummaryApi {
+  id: number;
+  name: string;
+  breed: string;
+  type: PetTypeApi;
+  image_public_id: string | null;
+  image_url: string | null;
+}
+
+export interface AdoptionRequestAdopterSummaryApi {
+  id: number;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  city: string | null;
+  avatar_url: string | null;
+}
+
+export interface AdoptionRequestApi {
+  id: number;
+  pet_id: number;
+  adopter_id: number;
+  foundation_id: number;
+  status: AdoptionStatusApi;
+  message: string | null;
+  created_at: string;
+  updated_at: string;
+  pet: AdoptionRequestPetSummaryApi;
+  adopter: AdoptionRequestAdopterSummaryApi;
+}
+
+export interface AdoptionRequestCreatePayload {
+  message?: string;
 }

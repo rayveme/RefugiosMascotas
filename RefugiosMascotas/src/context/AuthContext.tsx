@@ -6,11 +6,13 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { adminApi } from '../api/admin';
 import { adoptersApi } from '../api/adopters';
 import { authApi } from '../api/auth';
 import { foundationsApi } from '../api/foundations';
 import { authStorage } from '../services/auth.service';
 import type {
+  AdminRegisterPayload,
   AdopterRegisterPayload,
   FoundationRegisterPayload,
   LoginPayload,
@@ -25,6 +27,7 @@ interface AuthContextValue {
   login: (payload: LoginPayload) => Promise<AuthUser>;
   registerAdopter: (payload: AdopterRegisterPayload) => Promise<AuthUser>;
   registerFoundation: (payload: FoundationRegisterPayload) => Promise<AuthUser>;
+  registerAdmin: (payload: AdminRegisterPayload) => Promise<AuthUser>;
   refresh: () => Promise<void>;
   logout: () => void;
   clearOAuthError: () => void;
@@ -38,7 +41,11 @@ async function loadProfile(role: Role): Promise<AuthUser> {
     const profile = await adoptersApi.me();
     return { role, profile };
   }
-  const profile = await foundationsApi.me();
+  if (role === 'foundation') {
+    const profile = await foundationsApi.me();
+    return { role, profile };
+  }
+  const profile = await adminApi.me();
   return { role, profile };
 }
 
@@ -108,6 +115,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [adoptToken],
   );
 
+  const registerAdmin = useCallback<AuthContextValue['registerAdmin']>(
+    async (payload) => {
+      const { access_token, role } = await authApi.registerAdmin(payload);
+      return adoptToken(access_token, role);
+    },
+    [adoptToken],
+  );
+
   const logout = useCallback(() => {
     authStorage.clear();
     setUser(null);
@@ -121,12 +136,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       registerAdopter,
       registerFoundation,
+      registerAdmin,
       refresh,
       logout,
       clearOAuthError,
       setOAuthError: setOAuthErrorPublic,
     }),
-    [user, loading, oauthError, login, registerAdopter, registerFoundation, refresh, logout, clearOAuthError, setOAuthErrorPublic],
+    [user, loading, oauthError, login, registerAdopter, registerFoundation, registerAdmin, refresh, logout, clearOAuthError, setOAuthErrorPublic],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

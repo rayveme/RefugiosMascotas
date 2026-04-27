@@ -31,7 +31,9 @@ export interface Refugio {
 
 export type DonationFrequency = 'once' | 'monthly';
 
-export type AuthRole = 'adopter' | 'foundation';
+export type AuthRole = 'adopter' | 'foundation' | 'admin';
+
+export type FoundationStatus = 'pending' | 'approved' | 'rejected';
 
 export interface AuthAdopter {
   id: number;
@@ -57,8 +59,49 @@ export interface AuthFoundation {
   gradientFrom: string;
   gradientTo: string;
   profileComplete: boolean;
+  status: FoundationStatus;
+}
+
+export interface AuthAdmin {
+  id: number;
+  email: string;
+  fullName: string;
 }
 
 export type AuthUser =
   | { role: 'adopter'; profile: AuthAdopter }
-  | { role: 'foundation'; profile: AuthFoundation };
+  | { role: 'foundation'; profile: AuthFoundation }
+  | { role: 'admin'; profile: AuthAdmin };
+
+export type AdoptionStatus = 'pending' | 'approved' | 'rejected';
+
+export interface AdoptionPetSummary {
+  id: number;
+  name: string;
+  breed: string;
+  type: 'Perro' | 'Gato';
+  imagePublicId: string | null;
+  imageUrl: string | null;
+}
+
+export interface AdoptionAdopterSummary {
+  id: number;
+  fullName: string;
+  email: string;
+  phone: string | null;
+  city: string | null;
+  avatarUrl: string | null;
+}
+
+export interface AdoptionRequest {
+  id: number;
+  petId: number;
+  adopterId: number;
+  foundationId: number;
+  status: AdoptionStatus;
+  message: string | null;
+  createdAt: string;
+  updatedAt: string;
+  pet: AdoptionPetSummary;
+  adopter: AdoptionAdopterSummary;
+}

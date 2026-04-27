@@ -3,10 +3,12 @@ import { authStorage } from '../services/auth.service';
 
 const baseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
 
+// No fijamos `Content-Type` global: axios lo decide solo según el payload
+// (`application/json` para objetos, `multipart/form-data; boundary=...` para FormData).
+// Forzarlo aquí rompía los uploads de imagen.
 export const apiClient: AxiosInstance = axios.create({
   baseURL,
   timeout: 15_000,
-  headers: { 'Content-Type': 'application/json' },
 });
 
 apiClient.interceptors.request.use((config) => {

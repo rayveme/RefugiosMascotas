@@ -1,4 +1,11 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type DragEvent,
+  type FormEvent,
+} from 'react';
 import Modal from '../../ui/Modal/Modal';
 import FormField from '../../ui/FormField/FormField';
 import { extractApiError } from '../../../api/client';
@@ -42,6 +49,20 @@ export default function PetForm({ open, onClose, onCreated }: Props) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const clearImage = () => {
+    setImageFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const acceptFile = (file: File): string | null => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type)) return 'Solo se aceptan imágenes JPG, PNG o WebP.';
+    if (file.size > MAX_IMAGE_BYTES) return 'La imagen pesa más de 5 MB.';
+    return null;
+  };
 
   // Limpia la URL del preview cuando cambie o se desmonte para no leak memoria.
   useEffect(() => {
@@ -59,6 +80,7 @@ export default function PetForm({ open, onClose, onCreated }: Props) {
     setImageFile(null);
     setImagePreview(null);
     setError(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleClose = () => {
@@ -69,17 +91,25 @@ export default function PetForm({ open, onClose, onCreated }: Props) {
   const onPickImage = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      setError('El archivo debe ser una imagen.');
-      return;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      setError('La imagen pesa más de 5 MB. Reduce su tamaño antes de subirla.');
-      return;
-    }
+    const err = acceptFile(file);
+    if (err) { setError(err); return; }
     setError(null);
     setImageFile(file);
   };
+
+  const onDrop = (e: DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    const err = acceptFile(file);
+    if (err) { setError(err); return; }
+    setError(null);
+    setImageFile(file);
+  };
+
+  const formatBytes = (n: number) =>
+    n < 1024 ? `${n} B` : n < 1024 * 1024 ? `${(n / 1024).toFixed(0)} KB` : `${(n / (1024 * 1024)).toFixed(1)} MB`;
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -219,35 +249,83 @@ export default function PetForm({ open, onClose, onCreated }: Props) {
 
             <fieldset className="pet-form__image">
               <legend>Foto de la mascota</legend>
-              <div className="image-picker">
-                <label className="image-picker__drop">
+
+              {imageFile && imagePreview ? (
+                <div className="image-picker image-picker--filled">
+                  <div className="image-picker__thumb">
+                    <img src={imagePreview} alt="Vista previa" />
+                  </div>
+                  <div className="image-picker__meta">
+                    <span className="image-picker__filename" title={imageFile.name}>
+                      {imageFile.name}
+                    </span>
+                    <span className="image-picker__filesize">{formatBytes(imageFile.size)}</span>
+                    <div className="image-picker__actions">
+                      <button
+                        type="button"
+                        className="image-picker__btn image-picker__btn--ghost"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="17 8 12 3 7 8" />
+                          <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        Cambiar
+                      </button>
+                      <button
+                        type="button"
+                        className="image-picker__btn image-picker__btn--danger"
+                        onClick={clearImage}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                          <path d="M10 11v6M14 11v6" />
+                        </svg>
+                        Quitar
+                      </button>
+                    </div>
+                  </div>
                   <input
+                    ref={fileInputRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp"
                     onChange={onPickImage}
+                    className="image-picker__input-hidden"
                   />
-                  <span className="image-picker__icon" aria-hidden="true">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                </div>
+              ) : (
+                <label
+                  className={`image-picker image-picker--drop${dragOver ? ' image-picker--drag' : ''}`}
+                  onDragEnter={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={onDrop}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={onPickImage}
+                    className="image-picker__input-hidden"
+                  />
+                  <span className="image-picker__illo" aria-hidden="true">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                      <rect x="3" y="3" width="18" height="18" rx="3" />
                       <circle cx="8.5" cy="8.5" r="1.5" />
                       <path d="M21 15l-5-5L5 21" />
                     </svg>
                   </span>
-                  <span className="image-picker__text">
-                    {imageFile ? imageFile.name : 'Click para subir una foto'}
+                  <span className="image-picker__title">
+                    Arrastra una foto aquí
                   </span>
-                  <span className="image-picker__hint">JPG, PNG o WebP · máx 5 MB</span>
+                  <span className="image-picker__sub">
+                    o <span className="image-picker__cta">selecciónala desde tu equipo</span>
+                  </span>
+                  <span className="image-picker__hint">JPG · PNG · WebP — máx 5 MB</span>
                 </label>
-                {imageFile && (
-                  <button
-                    type="button"
-                    className="image-picker__clear"
-                    onClick={() => setImageFile(null)}
-                  >
-                    Quitar
-                  </button>
-                )}
-              </div>
+              )}
             </fieldset>
 
             <fieldset className="pet-form__palette">

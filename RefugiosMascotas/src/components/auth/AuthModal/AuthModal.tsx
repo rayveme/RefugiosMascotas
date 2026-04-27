@@ -3,11 +3,12 @@ import Modal from '../../ui/Modal/Modal';
 import LoginForm from './LoginForm';
 import AdopterRegisterForm from './AdopterRegisterForm';
 import FoundationRegisterForm from './FoundationRegisterForm';
+import AdminRegisterForm from './AdminRegisterForm';
 import { authApi } from '../../../api/auth';
 import './AuthModal.css';
 
 type Mode = 'login' | 'register';
-type RegisterRole = 'adopter' | 'foundation' | null;
+type RegisterRole = 'adopter' | 'foundation' | 'admin' | null;
 
 interface Props {
   open: boolean;
@@ -52,8 +53,10 @@ export default function AuthModal({ open, initialMode = 'login', onClose }: Prop
   const titleNode = registerRole === 'adopter'
     ? { title: 'Crear cuenta de adoptante', subtitle: 'Solo necesitas estos datos. Pediremos teléfono y ciudad cuando vayas a adoptar.' }
     : registerRole === 'foundation'
-      ? { title: 'Registrar tu refugio', subtitle: 'Cuéntanos quién eres para que las personas puedan encontrarte.' }
-      : titles[mode];
+      ? { title: 'Registrar tu refugio', subtitle: 'Tu solicitud entrará en revisión por un administrador. Te avisaremos cuando sea aprobada.' }
+      : registerRole === 'admin'
+        ? { title: 'Crear cuenta de administrador', subtitle: 'Acceso al panel de gestión de la plataforma.' }
+        : titles[mode];
 
   return (
     <Modal
@@ -115,7 +118,22 @@ export default function AuthModal({ open, initialMode = 'login', onClose }: Prop
               </svg>
             </span>
             <span className="role-card__title">Soy un refugio</span>
-            <span className="role-card__desc">Publica mascotas en adopción y conecta con familias.</span>
+            <span className="role-card__desc">Publica mascotas en adopción. Tu cuenta debe ser aprobada por un admin.</span>
+          </button>
+
+          <button
+            type="button"
+            className="role-card role-card--admin"
+            onClick={() => setRegisterRole('admin')}
+          >
+            <span className="role-card__icon" aria-hidden="true">
+              <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#2D5A3D" strokeWidth="1.6">
+                <path d="M12 2L4 6v6c0 5 3.5 9.5 8 10 4.5-.5 8-5 8-10V6l-8-4z" />
+                <path d="M9 12l2 2 4-4" />
+              </svg>
+            </span>
+            <span className="role-card__title">Soy admin</span>
+            <span className="role-card__desc">Acceso al panel de control de la plataforma (solo local).</span>
           </button>
         </div>
       )}
@@ -137,6 +155,16 @@ export default function AuthModal({ open, initialMode = 'login', onClose }: Prop
             Volver
           </button>
           <FoundationRegisterForm onSuccess={handleClose} />
+        </>
+      )}
+
+      {mode === 'register' && registerRole === 'admin' && (
+        <>
+          <button className="auth-back" onClick={() => setRegisterRole(null)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6" /></svg>
+            Volver
+          </button>
+          <AdminRegisterForm onSuccess={handleClose} />
         </>
       )}
 

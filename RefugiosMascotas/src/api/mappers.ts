@@ -1,8 +1,8 @@
 // Traduce los DTOs de la API (snake_case) a los tipos UI (camelCase) que ya
 // usaban los componentes existentes. Mantiene el front desacoplado del wire-format.
 
-import type { AdopterApi, FoundationApi, PetApi } from '../types/api';
-import type { AuthAdopter, AuthFoundation, Pet, Refugio } from '../types';
+import type { AdminApi, AdopterApi, AdoptionRequestApi, FoundationApi, PetApi } from '../types/api';
+import type { AdoptionRequest, AuthAdmin, AuthAdopter, AuthFoundation, Pet, Refugio } from '../types';
 
 export function mapAdopter(a: AdopterApi): AuthAdopter {
   return {
@@ -31,6 +31,15 @@ export function mapFoundation(f: FoundationApi): AuthFoundation {
     gradientFrom: f.gradient_from,
     gradientTo: f.gradient_to,
     profileComplete: f.profile_complete,
+    status: f.status,
+  };
+}
+
+export function mapAdmin(a: AdminApi): AuthAdmin {
+  return {
+    id: a.id,
+    email: a.email,
+    fullName: a.full_name,
   };
 }
 
@@ -66,5 +75,34 @@ export function mapPet(p: PetApi): Pet {
     foundationId: p.foundation_id,
     imageUrl: p.image_url,
     imagePublicId: p.image_public_id,
+  };
+}
+
+export function mapAdoptionRequest(r: AdoptionRequestApi): AdoptionRequest {
+  return {
+    id: r.id,
+    petId: r.pet_id,
+    adopterId: r.adopter_id,
+    foundationId: r.foundation_id,
+    status: r.status,
+    message: r.message,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+    pet: {
+      id: r.pet.id,
+      name: r.pet.name,
+      breed: r.pet.breed,
+      type: r.pet.type,
+      imagePublicId: r.pet.image_public_id,
+      imageUrl: r.pet.image_url,
+    },
+    adopter: {
+      id: r.adopter.id,
+      fullName: r.adopter.full_name,
+      email: r.adopter.email,
+      phone: r.adopter.phone,
+      city: r.adopter.city,
+      avatarUrl: r.adopter.avatar_url,
+    },
   };
 }

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin
 
 if TYPE_CHECKING:
+    from app.models.adoption_request import AdoptionRequest
     from app.models.foundation import Foundation
 
 
@@ -42,4 +43,10 @@ class Pet(Base, TimestampMixin):
 
     adopter_id: Mapped[int | None] = mapped_column(
         ForeignKey("adopters.id", ondelete="SET NULL"), default=None, index=True
+    )
+
+    adoption_requests: Mapped[list["AdoptionRequest"]] = relationship(
+        back_populates="pet",
+        cascade="all, delete-orphan",
+        lazy="selectin",
     )

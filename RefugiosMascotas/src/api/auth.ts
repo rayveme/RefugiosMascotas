@@ -1,5 +1,6 @@
 import { apiClient } from './client';
 import type {
+  AdminRegisterPayload,
   AdopterRegisterPayload,
   FoundationRegisterPayload,
   LoginPayload,
@@ -15,6 +16,11 @@ export const authApi = {
   registerFoundation(payload: FoundationRegisterPayload) {
     return apiClient
       .post<TokenResponse>('/auth/register/foundation', payload)
+      .then((r) => r.data);
+  },
+  registerAdmin(payload: AdminRegisterPayload) {
+    return apiClient
+      .post<TokenResponse>('/auth/register/admin', payload)
       .then((r) => r.data);
   },
   login(payload: LoginPayload) {

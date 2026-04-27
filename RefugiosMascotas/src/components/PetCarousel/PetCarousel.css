@@ -61,6 +61,13 @@
   justify-content: center;
 }
 
+.pet-card__photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .pet-card__badge {
   position: absolute;
   top: 14px; left: 14px;
@@ -162,6 +169,16 @@
 .btn-adopt:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.btn-adopt--requested {
+  background: rgba(74, 122, 90, 0.15) !important;
+  color: var(--forest) !important;
+  border: 1.5px solid rgba(74, 122, 90, 0.35);
+  opacity: 1 !important;
+  cursor: default !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .pet-fallback-note {

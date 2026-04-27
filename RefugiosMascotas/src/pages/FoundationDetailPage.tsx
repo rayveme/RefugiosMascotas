@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
 import { foundationsApi } from '../api/foundations';
 import { petsApi } from '../api/pets';
+import { adoptionsApi } from '../api/adoptions';
 import { extractApiError } from '../api/client';
 import { useAuth } from '../hooks/useAuth';
 import type { Pet, Refugio } from '../types';
@@ -46,8 +47,26 @@ export default function FoundationDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [adoptingId, setAdoptingId] = useState<number | null>(null);
   const [showAdopted, setShowAdopted] = useState(false);
+  const [pendingPetIds, setPendingPetIds] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    if (user?.role !== 'adopter') {
+      setPendingPetIds(new Set());
+      return;
+    }
+    let alive = true;
+    adoptionsApi.listMine('pending')
+      .then((reqs) => {
+        if (!alive) return;
+        setPendingPetIds(new Set(reqs.map((r) => r.petId)));
+      })
+      .catch(() => { /* silencioso */ });
+    return () => { alive = false; };
+  }, [user?.role, user?.profile.id]);
 
   const isOwner = user?.role === 'foundation' && user.profile.id === foundationId;
+
+  const { petsRefreshKey } = ctx;
 
   useEffect(() => {
     if (foundationId === null) {
@@ -70,39 +89,48 @@ export default function FoundationDetailPage() {
       .catch((err) => alive && setError(extractApiError(err, 'No pudimos cargar el refugio.')))
       .finally(() => alive && setLoading(false));
     return () => { alive = false; };
-  }, [foundationId, ctx.petsRefreshKey, showAdopted]);
+  }, [foundationId, petsRefreshKey, showAdopted]);
 
   const onAdopt = async (pet: Pet) => {
     if (!user) { ctx.openLogin(); return; }
     if (user.role !== 'adopter') {
-      ctx.showToast('Esta acción es solo para usuarios adoptantes.');
+      ctx.showToast('Esta acción es solo para usuarios adoptantes.', 'warning');
       return;
     }
     if (!user.profile.profileComplete) {
-      ctx.showToast('Completa ciudad y teléfono en tu perfil para poder adoptar.');
+      ctx.showToast('Completa ciudad y teléfono en tu perfil para poder adoptar.', 'warning');
       return;
     }
     setAdoptingId(pet.id);
     try {
-      await petsApi.adopt(pet.id);
-      setPets((cur) => cur.filter((p) => p.id !== pet.id));
-      ctx.bumpFoundations();
+      await adoptionsApi.request(pet.id);
+      setPendingPetIds((cur) => new Set(cur).add(pet.id));
+      ctx.showToast(
+        `Solicitud enviada para ${pet.name}. La fundación la revisará pronto.`,
+        'success',
+      );
     } catch (err) {
-      ctx.showToast(extractApiError(err, 'No pudimos completar la adopción.'));
+      ctx.showToast(extractApiError(err, 'No pudimos enviar la solicitud.'), 'error');
     } finally {
       setAdoptingId(null);
     }
   };
 
   const onDelete = async (pet: Pet) => {
-    if (!confirm(`¿Eliminar la publicación de ${pet.name}?`)) return;
+    const ok = await ctx.confirm({
+      title: 'Eliminar publicación',
+      message: <>¿Eliminar la publicación de <strong>{pet.name}</strong>? Esta acción no se puede deshacer.</>,
+      confirmText: 'Eliminar',
+      tone: 'danger',
+    });
+    if (!ok) return;
     try {
       await petsApi.remove(pet.id);
       setPets((cur) => cur.filter((p) => p.id !== pet.id));
       ctx.bumpPets();
-      ctx.showToast(`Publicación de ${pet.name} eliminada.`);
+      ctx.showToast(`Publicación de ${pet.name} eliminada`, 'info');
     } catch (err) {
-      ctx.showToast(extractApiError(err, 'No pudimos eliminar.'));
+      ctx.showToast(extractApiError(err, 'No pudimos eliminar.'), 'error');
     }
   };
 
@@ -155,18 +183,32 @@ export default function FoundationDetailPage() {
           </div>
           {isOwner && (
             <div className="foundation-detail__owner-actions">
-              <button className="btn btn--amber" onClick={ctx.openPetForm}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-                Publicar mascota
-              </button>
+              {user?.role === 'foundation' && user.profile.status === 'approved' && (
+                <button className="btn btn--amber" onClick={ctx.openPetForm}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                  Publicar mascota
+                </button>
+              )}
               <button className="btn btn--ghost-light" onClick={ctx.openProfileEdit}>
                 Editar refugio
               </button>
             </div>
           )}
         </header>
+
+        {isOwner && user?.role === 'foundation' && user.profile.status === 'pending' && (
+          <div className="foundation-detail__status-banner foundation-detail__status-banner--pending">
+            ⏳ Tu refugio está pendiente de aprobación. No podrás publicar mascotas hasta que un administrador apruebe tu solicitud.
+          </div>
+        )}
+
+        {isOwner && user?.role === 'foundation' && user.profile.status === 'rejected' && (
+          <div className="foundation-detail__status-banner foundation-detail__status-banner--rejected">
+            ✕ Tu solicitud de refugio fue rechazada. Contacta al administrador si crees que es un error.
+          </div>
+        )}
 
         <div className="foundation-detail__pets-header">
           <h2 className="display-md">
@@ -195,12 +237,21 @@ export default function FoundationDetailPage() {
             {pets.map((pet) => (
               <article key={pet.id} className={`pet-card${pet.isAdopted ? ' pet-card--adopted' : ''}`}>
                 <div className="pet-card__img">
-                  <div
-                    className="pet-card__img-bg"
-                    style={{ background: `linear-gradient(140deg, ${pet.gradientFrom}, ${pet.gradientTo})` }}
-                  >
-                    {pet.type === 'Perro' ? <DogIllo /> : <CatIllo />}
-                  </div>
+                  {pet.imageUrl ? (
+                    <img
+                      src={pet.imageUrl}
+                      alt={`Foto de ${pet.name}`}
+                      className="pet-card__photo"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div
+                      className="pet-card__img-bg"
+                      style={{ background: `linear-gradient(140deg, ${pet.gradientFrom}, ${pet.gradientTo})` }}
+                    >
+                      {pet.type === 'Perro' ? <DogIllo /> : <CatIllo />}
+                    </div>
+                  )}
                   <span className={`pet-card__badge pet-card__badge--${pet.type === 'Perro' ? 'dog' : 'cat'}`}>
                     {pet.type}
                   </span>
@@ -230,11 +281,17 @@ export default function FoundationDetailPage() {
                     </div>
                   ) : (
                     <button
-                      className="btn-adopt"
+                      className={`btn-adopt${pendingPetIds.has(pet.id) ? ' btn-adopt--requested' : ''}`}
                       onClick={() => onAdopt(pet)}
-                      disabled={adoptingId === pet.id || pet.isAdopted}
+                      disabled={adoptingId === pet.id || pet.isAdopted || pendingPetIds.has(pet.id)}
                     >
-                      {pet.isAdopted ? 'Adoptada' : adoptingId === pet.id ? 'Procesando…' : 'Quiero adoptar'}
+                      {pet.isAdopted
+                        ? 'Adoptada'
+                        : adoptingId === pet.id
+                          ? 'Enviando…'
+                          : pendingPetIds.has(pet.id)
+                            ? '✓ Solicitud enviada'
+                            : 'Quiero adoptar'}
                     </button>
                   )}
                 </div>

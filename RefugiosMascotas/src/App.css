@@ -25,25 +25,7 @@
   to { transform: rotate(360deg); }
 }
 
-.app-toast {
-  position: fixed;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 3000;
-  background: var(--forest-deep);
-  color: var(--cream);
-  padding: 14px 22px;
-  border-radius: var(--radius-full);
-  font-size: 0.88rem;
-  font-weight: 500;
-  box-shadow: 0 18px 40px rgba(21, 42, 30, 0.32);
-  animation: toast-rise 0.22s ease-out;
-  max-width: calc(100vw - 48px);
-  text-align: center;
-}
-
-@keyframes toast-rise {
-  from { opacity: 0; transform: translate(-50%, 12px); }
-  to   { opacity: 1; transform: translate(-50%, 0); }
+/* Sonner: tipografía que combine con el resto de la app. */
+[data-sonner-toaster] [data-sonner-toast] {
+  font-family: 'DM Sans', sans-serif !important;
 }

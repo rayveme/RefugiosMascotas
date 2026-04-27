@@ -46,12 +46,27 @@ export default function Navbar({
   const userInitial = user
     ? user.role === 'adopter'
       ? (user.profile.fullName.charAt(0) || user.profile.email.charAt(0)).toUpperCase()
-      : (user.profile.initial || user.profile.name.charAt(0)).toUpperCase()
+      : user.role === 'foundation'
+        ? (user.profile.initial || user.profile.name.charAt(0)).toUpperCase()
+        : user.profile.fullName.charAt(0).toUpperCase()
     : '';
 
   const userLabel = user
-    ? user.role === 'adopter' ? user.profile.fullName : user.profile.name
+    ? user.role === 'adopter'
+      ? user.profile.fullName
+      : user.role === 'foundation'
+        ? user.profile.name
+        : user.profile.fullName
     : '';
+
+  const roleLabel = user?.role === 'adopter'
+    ? 'Adoptante'
+    : user?.role === 'foundation'
+      ? 'Refugio'
+      : 'Admin';
+
+  const foundationPending = user?.role === 'foundation' && user.profile.status === 'pending';
+  const foundationRejected = user?.role === 'foundation' && user.profile.status === 'rejected';
 
   return (
     <nav
@@ -80,13 +95,22 @@ export default function Navbar({
         </ul>
 
         <div className="navbar__actions">
-          {user?.role === 'foundation' && (
+          {user?.role === 'foundation' && user.profile.status === 'approved' && (
             <button className="btn btn--amber navbar__cta" onClick={onPublishPetClick}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M12 5v14M5 12h14" />
               </svg>
               Publicar mascota
             </button>
+          )}
+
+          {user?.role === 'admin' && (
+            <Link to="/admin" className="btn btn--amber navbar__cta">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M12 2L4 6v6c0 5 3.5 9.5 8 10 4.5-.5 8-5 8-10V6l-8-4z" />
+              </svg>
+              Panel admin
+            </Link>
           )}
 
           {!user ? (
@@ -115,10 +139,22 @@ export default function Navbar({
                 <div className="user-menu__dropdown" role="menu">
                   <div className="user-menu__header">
                     <strong>{userLabel}</strong>
-                    <span>{user.role === 'adopter' ? 'Adoptante' : 'Refugio'}</span>
+                    <span>{roleLabel}</span>
                   </div>
 
-                  {!user.profile.profileComplete && (
+                  {foundationPending && (
+                    <div className="user-menu__warning user-menu__warning--info">
+                      ⏳ Tu refugio está pendiente de aprobación
+                    </div>
+                  )}
+
+                  {foundationRejected && (
+                    <div className="user-menu__warning user-menu__warning--danger">
+                      ✕ Tu solicitud de refugio fue rechazada
+                    </div>
+                  )}
+
+                  {user.role !== 'admin' && !user.profile.profileComplete && (
                     <button
                       className="user-menu__warning"
                       onClick={() => { setUserMenuOpen(false); onEditProfileClick(); }}
@@ -127,14 +163,36 @@ export default function Navbar({
                     </button>
                   )}
 
-                  <button
-                    className="user-menu__item"
-                    onClick={() => { setUserMenuOpen(false); onEditProfileClick(); }}
-                  >
-                    Mi perfil
-                  </button>
+                  {user.role !== 'admin' && (
+                    <button
+                      className="user-menu__item"
+                      onClick={() => { setUserMenuOpen(false); onEditProfileClick(); }}
+                    >
+                      Mi perfil
+                    </button>
+                  )}
 
-                  {user.role === 'foundation' && (
+                  {user.role === 'admin' && (
+                    <Link
+                      to="/admin"
+                      className="user-menu__item user-menu__item--link"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      Panel de admin
+                    </Link>
+                  )}
+
+                  {user.role !== 'admin' && (
+                    <Link
+                      to="/solicitudes"
+                      className="user-menu__item user-menu__item--link"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      {user.role === 'foundation' ? 'Solicitudes recibidas' : 'Mis solicitudes'}
+                    </Link>
+                  )}
+
+                  {user.role === 'foundation' && user.profile.status === 'approved' && (
                     <>
                       <Link
                         to={`/refugios/${user.profile.id}`}

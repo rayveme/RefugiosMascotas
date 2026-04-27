@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useReveal } from '../../hooks/useReveal';
 import { useAuth } from '../../hooks/useAuth';
 import { petsApi } from '../../api/pets';
+import { adoptionsApi } from '../../api/adoptions';
 import { extractApiError } from '../../api/client';
 import { pets as fallbackPets } from '../../data/pets';
 import type { Pet } from '../../types';
@@ -36,18 +37,28 @@ interface PetCardProps {
   onAdopt: (pet: Pet) => void;
   adopting: boolean;
   disabled?: boolean;
+  alreadyRequested?: boolean;
 }
 
-function PetCard({ pet, onAdopt, adopting, disabled }: PetCardProps) {
+function PetCard({ pet, onAdopt, adopting, disabled, alreadyRequested }: PetCardProps) {
   return (
     <article className="pet-card" role="listitem">
       <div className="pet-card__img">
-        <div
-          className="pet-card__img-bg"
-          style={{ background: `linear-gradient(140deg, ${pet.gradientFrom}, ${pet.gradientTo})` }}
-        >
-          {pet.type === 'Perro' ? <DogIllo /> : <CatIllo />}
-        </div>
+        {pet.imageUrl ? (
+          <img
+            src={pet.imageUrl}
+            alt={`Foto de ${pet.name}`}
+            className="pet-card__photo"
+            loading="lazy"
+          />
+        ) : (
+          <div
+            className="pet-card__img-bg"
+            style={{ background: `linear-gradient(140deg, ${pet.gradientFrom}, ${pet.gradientTo})` }}
+          >
+            {pet.type === 'Perro' ? <DogIllo /> : <CatIllo />}
+          </div>
+        )}
         <span className={`pet-card__badge pet-card__badge--${pet.type === 'Perro' ? 'dog' : 'cat'}`}>
           {pet.type}
         </span>
@@ -79,13 +90,25 @@ function PetCard({ pet, onAdopt, adopting, disabled }: PetCardProps) {
         </div>
 
         <button
-          className="btn-adopt"
+          className={`btn-adopt${alreadyRequested ? ' btn-adopt--requested' : ''}`}
           onClick={() => onAdopt(pet)}
-          disabled={adopting || disabled}
+          disabled={adopting || disabled || alreadyRequested}
           aria-label={`Adoptar a ${pet.name}`}
-          title={disabled ? 'Mascota de muestra — registra mascotas reales para adoptar' : undefined}
+          title={
+            disabled
+              ? 'Mascota de muestra — registra mascotas reales para adoptar'
+              : alreadyRequested
+                ? 'Ya tienes una solicitud pendiente para esta mascota'
+                : undefined
+          }
         >
-          {adopting ? 'Procesando…' : disabled ? 'Demo' : 'Quiero adoptar'}
+          {adopting
+            ? 'Enviando…'
+            : disabled
+              ? 'Demo'
+              : alreadyRequested
+                ? '✓ Solicitud enviada'
+                : 'Quiero adoptar'}
         </button>
       </div>
     </article>
@@ -96,7 +119,7 @@ const CARD_W = 272 + 22;
 
 interface Props {
   onRequireAuth: () => void;
-  onRequireProfile: (message: string) => void;
+  onRequireProfile: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
   refreshKey?: number;
 }
 
@@ -112,6 +135,7 @@ export default function PetCarousel({ onRequireAuth, onRequireProfile, refreshKe
   const [loading, setLoading] = useState(true);
   const [usingFallback, setUsingFallback] = useState(false);
   const [adoptingId, setAdoptingId] = useState<number | null>(null);
+  const [pendingPetIds, setPendingPetIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     let alive = true;
@@ -137,22 +161,42 @@ export default function PetCarousel({ onRequireAuth, onRequireProfile, refreshKe
     return () => { alive = false; };
   }, [refreshKey]);
 
+  // Si el adopter está logueado, traemos las pendientes para marcar las cards.
+  useEffect(() => {
+    if (user?.role !== 'adopter') {
+      setPendingPetIds(new Set());
+      return;
+    }
+    let alive = true;
+    adoptionsApi.listMine('pending')
+      .then((reqs) => {
+        if (!alive) return;
+        setPendingPetIds(new Set(reqs.map((r) => r.petId)));
+      })
+      .catch(() => { /* silencioso — no es crítico */ });
+    return () => { alive = false; };
+  }, [user?.role, user?.profile.id, refreshKey]);
+
   const onAdopt = async (pet: Pet) => {
     if (!user) { onRequireAuth(); return; }
     if (user.role !== 'adopter') {
-      onRequireProfile('Esta acción es solo para usuarios adoptantes.');
+      onRequireProfile('Esta acción es solo para usuarios adoptantes.', 'warning');
       return;
     }
     if (!user.profile.profileComplete) {
-      onRequireProfile('Completa ciudad y teléfono en tu perfil para poder adoptar.');
+      onRequireProfile('Completa ciudad y teléfono en tu perfil para poder adoptar.', 'warning');
       return;
     }
     setAdoptingId(pet.id);
     try {
-      await petsApi.adopt(pet.id);
-      setPets((cur) => cur.filter((p) => p.id !== pet.id));
+      await adoptionsApi.request(pet.id);
+      setPendingPetIds((cur) => new Set(cur).add(pet.id));
+      onRequireProfile(
+        `Solicitud enviada para ${pet.name}. La fundación la revisará pronto.`,
+        'success',
+      );
     } catch (err) {
-      onRequireProfile(extractApiError(err, 'No pudimos completar la adopción.'));
+      onRequireProfile(extractApiError(err, 'No pudimos enviar la solicitud.'), 'error');
     } finally {
       setAdoptingId(null);
     }
@@ -249,6 +293,7 @@ export default function PetCarousel({ onRequireAuth, onRequireProfile, refreshKe
                     onAdopt={onAdopt}
                     adopting={adoptingId === pet.id}
                     disabled={usingFallback}
+                    alreadyRequested={pendingPetIds.has(pet.id)}
                   />
                 ))}
           </div>

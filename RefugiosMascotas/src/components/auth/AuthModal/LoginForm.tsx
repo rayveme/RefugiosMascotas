@@ -47,7 +47,14 @@ export default function LoginForm({ onSuccess }: Props) {
           className={`role-toggle__btn${role === 'foundation' ? ' role-toggle__btn--active' : ''}`}
           onClick={() => setRole('foundation')}
         >
-          Soy refugio
+          Refugio
+        </button>
+        <button
+          type="button"
+          className={`role-toggle__btn${role === 'admin' ? ' role-toggle__btn--active' : ''}`}
+          onClick={() => setRole('admin')}
+        >
+          Admin
         </button>
       </div>
 

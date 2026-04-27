@@ -15,7 +15,7 @@ export const authStorage = {
   },
   getRole(): Role | null {
     const v = localStorage.getItem(ROLE_KEY);
-    return v === 'adopter' || v === 'foundation' ? v : null;
+    return v === 'adopter' || v === 'foundation' || v === 'admin' ? v : null;
   },
   set(token: string, role: Role) {
     localStorage.setItem(TOKEN_KEY, token);

@@ -8,8 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.deps import SessionDep
-from app.models import Adopter, Foundation
+from app.models import Admin, Adopter, Foundation
 from app.oauth import oauth
+from app.schemas.admin import AdminRegister
 from app.schemas.auth import (
     AdopterRegister,
     FoundationRegister,
@@ -69,7 +70,7 @@ async def register_adopter(payload: AdopterRegister, session: SessionDep) -> Tok
     "/register/foundation",
     response_model=TokenResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Registra una fundación con email y contraseña",
+    summary="Registra una fundación (queda PENDING hasta que un admin la apruebe)",
 )
 async def register_foundation(
     payload: FoundationRegister, session: SessionDep
@@ -77,6 +78,8 @@ async def register_foundation(
     if await _email_exists(session, Foundation, payload.email):
         raise HTTPException(status.HTTP_409_CONFLICT, "El email ya está registrado")
 
+    # status arranca en PENDING (default del modelo). El admin aprueba después
+    # via /admin/foundations/{id}/approve.
     foundation = Foundation(
         email=payload.email,
         name=payload.name,
@@ -93,12 +96,35 @@ async def register_foundation(
     return _make_token("foundation", foundation.id)
 
 
+@router.post(
+    "/register/admin",
+    response_model=TokenResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Registra una cuenta de administrador (sin restricciones — solo para uso local)",
+)
+async def register_admin(payload: AdminRegister, session: SessionDep) -> TokenResponse:
+    if await _email_exists(session, Admin, payload.email):
+        raise HTTPException(status.HTTP_409_CONFLICT, "El email ya está registrado")
+
+    admin = Admin(
+        email=payload.email,
+        full_name=payload.full_name,
+        password_hash=hash_password(payload.password),
+    )
+    session.add(admin)
+    await session.commit()
+    await session.refresh(admin)
+    return _make_token("admin", admin.id)
+
+
 @router.post("/login", response_model=TokenResponse)
 async def login(payload: LoginRequest, session: SessionDep) -> TokenResponse:
     if payload.role == "adopter":
         user = await _get_by_email(session, Adopter, payload.email)
-    else:
+    elif payload.role == "foundation":
         user = await _get_by_email(session, Foundation, payload.email)
+    else:  # admin
+        user = await _get_by_email(session, Admin, payload.email)
 
     if user is None or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Credenciales inválidas")
@@ -185,7 +211,9 @@ async def dev_login(
 # --------- Helpers ---------
 
 async def _email_exists(
-    session: AsyncSession, model: type[Adopter] | type[Foundation], email: str
+    session: AsyncSession,
+    model: type[Adopter] | type[Foundation] | type[Admin],
+    email: str,
 ) -> bool:
     stmt = select(model.id).where(model.email == email)
     return (await session.scalar(stmt)) is not None
@@ -193,9 +221,9 @@ async def _email_exists(
 
 async def _get_by_email(
     session: AsyncSession,
-    model: type[Adopter] | type[Foundation],
+    model: type[Adopter] | type[Foundation] | type[Admin],
     email: str,
-) -> Adopter | Foundation | None:
+) -> Adopter | Foundation | Admin | None:
     stmt = select(model).where(model.email == email)
     return (await session.scalars(stmt)).first()
 
