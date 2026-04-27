@@ -27,8 +27,10 @@ class Settings(BaseSettings):
 
     session_secret: str = "dev-session-secret-change-in-prod-please-please"
 
-    google_client_id: str = "***REMOVED***"
-    google_client_secret: str = "***REMOVED***"
+    # ⚠️ NO commitear credenciales reales. Usa un .env local con
+    # GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET (pydantic-settings los lee).
+    google_client_id: str = ""
+    google_client_secret: str = ""
     google_redirect_uri: str = "http://localhost:8000/auth/google/callback"
 
     # --- Cloudinary (hardcoded para esta corrida local) ---

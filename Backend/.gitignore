@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual env
+.venv/
+venv/
+ENV/
+env/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Secrets — NUNCA commitear
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# DB local
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Cloudinary / uploads locales
+uploads/
+tmp/
+
+# Cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
