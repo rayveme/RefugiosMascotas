@@ -33,10 +33,11 @@ class Settings(BaseSettings):
     google_client_secret: str = ""
     google_redirect_uri: str = "http://localhost:8000/auth/google/callback"
 
-    # --- Cloudinary (hardcoded para esta corrida local) ---
-    cloudinary_cloud_name: str = "dsl5sarlu"
-    cloudinary_api_key: str = "***REMOVED***"
-    cloudinary_api_secret: str = "***REMOVED***"
+    # --- Cloudinary ---
+    # Configura via .env: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET.
+    cloudinary_cloud_name: str = ""
+    cloudinary_api_key: str = ""
+    cloudinary_api_secret: str = ""
     cloudinary_folder: str = "huella/pets"
 
     @property
