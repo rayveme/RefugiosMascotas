@@ -1,16 +1,28 @@
+export interface Vaccine {
+  name: string;
+  done: boolean;
+}
+
 export interface Pet {
   id: number;
   name: string;
-  type: 'Perro' | 'Gato';
+  type: string;
   breed: string;
   age: string;
   shelter: string;
   city: string;
   urgent?: boolean;
-  vaccinated: boolean;
+  vaccinated?: boolean;
   sterilized?: boolean;
   gradientFrom: string;
   gradientTo: string;
+  // Campos nuevos para el modal
+  photos: string[];
+  description: string;
+  gender: string;
+  weight: string;
+  diseases: string;
+  vaccines: Vaccine[];
 }
 
 export interface Refugio {
@@ -25,4 +37,4 @@ export interface Refugio {
   initial: string;
 }
 
-export type DonationFrequency = 'once' | 'monthly';
+export type DonationFrequency = "once" | "monthly";
