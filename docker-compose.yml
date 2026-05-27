@@ -1,0 +1,69 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: refugios-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-refugios}
+    ports:
+      # Mapeado a 5433 en el host para no chocar con un Postgres local en 5432.
+      # Dentro de la red compose el backend sigue conectando a `db:5432`.
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-refugios}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: refugios-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    # Si existe Backend/.env (uso local), sus variables se inyectan al contenedor.
+    # En CI o para el primer arranque público basta con las defaults de `environment`.
+    env_file:
+      - path: ./Backend/.env
+        required: false
+    # OJO: lo que va aquí SOBRESCRIBE `env_file`. Solo definimos lo que
+    # debe ser específico del entorno docker (DATABASE_URL apuntando al
+    # servicio `db`, PORT del contenedor). Todo lo demás (secrets, OAuth,
+    # Cloudinary) se toma de Backend/.env si existe; si no, de las defaults
+    # de pydantic en app/config.py.
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-refugios}
+      PORT: 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      # Hot-reload del código en local. Comentar en producción.
+      - ./Backend/app:/app/app
+    command: ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"]
+
+  frontend:
+    build:
+      context: ./RefugiosMascotas
+      dockerfile: Dockerfile
+    container_name: refugios-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    ports:
+      - "5173:5173"
+    volumes:
+      # HMR — montamos el código pero conservamos node_modules del contenedor.
+      - ./RefugiosMascotas:/app
+      - /app/node_modules
+
+volumes:
+  pgdata:

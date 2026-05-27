@@ -25,12 +25,7 @@ app = FastAPI(title=settings.app_name, debug=settings.debug, lifespan=lifespan)
 app.add_middleware(SessionMiddleware, secret_key=settings.session_secret)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        settings.frontend_url,            # http://localhost:5173 (Vite dev)
-        "http://127.0.0.1:5173",          # Vite resuelto por IP
-        "http://localhost:4173",          # Vite preview
-        "http://127.0.0.1:4173",
-    ],
+    allow_origins=settings.cors_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

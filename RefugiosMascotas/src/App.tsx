@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  BrowserRouter,
   Navigate,
   Outlet,
   Route,
@@ -139,23 +138,22 @@ function AppShell() {
 }
 
 export default function App() {
+  // El <BrowserRouter> está en main.tsx envolviendo a <App />.
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route element={<AppShell />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/refugios" element={<FoundationsPage />} />
-            <Route path="/refugios/:id" element={<FoundationDetailPage />} />
-            <Route path="/solicitudes" element={<RequestsPage />} />
-            <Route path="/admin" element={<AdminPage />} />
-            <Route path="/registrar-refugio" element={<RegistroRefugio />} />
-            <Route path="/dashboard" element={<DashboardRefugio />} />
-            <Route path="/auth/callback" element={<AuthCallbackPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+    <AuthProvider>
+      <Routes>
+        <Route element={<AppShell />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/refugios" element={<FoundationsPage />} />
+          <Route path="/refugios/:id" element={<FoundationDetailPage />} />
+          <Route path="/solicitudes" element={<RequestsPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/registrar-refugio" element={<RegistroRefugio />} />
+          <Route path="/dashboard" element={<DashboardRefugio />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    </AuthProvider>
   );
 }
