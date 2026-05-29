@@ -94,8 +94,7 @@ export default function RegistroRefugio() {
   const [step, setStep]           = useState<Step>(1);
   const [form, setForm]           = useState<FormState>(INITIAL_FORM);
   const [errors, setErrors]       = useState<Partial<Record<keyof FormState, string>>>({});
-  const [submitted, setSubmitted] = useState(false);
-
+  const [submitted] = useState(false);
   // helpers
   const set = (key: keyof FormState, val: string) =>
     setForm(f => ({ ...f, [key]: val }));

@@ -200,6 +200,35 @@
   transform: translateY(-2px);
 }
 
+.refugios-fallback-note {
+  margin: -20px 0 28px;
+  font-size: 0.82rem;
+  color: rgba(250, 243, 228, 0.55);
+  font-style: italic;
+  position: relative;
+  z-index: 1;
+}
+
+.refugio-card--skeleton {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.refugio-card__avatar--skeleton {
+  background: linear-gradient(90deg, rgba(250, 243, 228, 0.05), rgba(250, 243, 228, 0.12), rgba(250, 243, 228, 0.05));
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.refugio-card--skeleton .skeleton-line {
+  background: linear-gradient(90deg, rgba(250, 243, 228, 0.05), rgba(250, 243, 228, 0.12), rgba(250, 243, 228, 0.05));
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  height: 10px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
 @media (max-width: 768px) {
   .refugios-grid {
     grid-template-columns: 1fr;
