@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './DashboardRefugio.css';
+import './Dashboardrefugio.css';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Status = 'Disponible' | 'En proceso';

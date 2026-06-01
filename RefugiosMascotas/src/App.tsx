@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  BrowserRouter,
   Navigate,
   Outlet,
   Route,
@@ -31,7 +30,6 @@ import { useAuth } from "./hooks/useAuth";
 import { notify } from "./services/notify.service";
 
 import type { ShellContext } from "./types/shell";
-
 function AppShell() {
   const { user, oauthError, clearOAuthError } = useAuth();
   const { confirm, dialog: confirmDialog } = useConfirm();
@@ -173,6 +171,7 @@ function AppShell() {
 }
 
 export default function App() {
+  // El <BrowserRouter> está en main.tsx envolviendo a <App />.
   return (
     <AuthProvider>
       <Routes>
