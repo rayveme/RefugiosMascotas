@@ -1,0 +1,375 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useOutletContext } from 'react-router-dom';
+import { adminApi } from '../api/admin';
+import { extractApiError } from '../api/client';
+import { useAuth } from '../hooks/useAuth';
+import type { AuthAdopter, AuthFoundation, FoundationStatus, Pet } from '../types';
+import type { ShellContext } from '../types/shell';
+import './AdminPage.css';
+
+type Tab = 'pending' | 'foundations' | 'adopters' | 'pets';
+
+const TAB_LABEL: Record<Tab, string> = {
+  pending: 'Solicitudes pendientes',
+  foundations: 'Fundaciones',
+  adopters: 'Adoptantes',
+  pets: 'Mascotas',
+};
+
+const STATUS_LABEL: Record<FoundationStatus, string> = {
+  pending: 'Pendiente',
+  approved: 'Aprobada',
+  rejected: 'Rechazada',
+};
+
+export default function AdminPage() {
+  const { user, loading: authLoading } = useAuth();
+  const ctx = useOutletContext<ShellContext>();
+  const [tab, setTab] = useState<Tab>('pending');
+
+  const [foundations, setFoundations] = useState<AuthFoundation[]>([]);
+  const [pendingFoundations, setPendingFoundations] = useState<AuthFoundation[]>([]);
+  const [adopters, setAdopters] = useState<AuthAdopter[]>([]);
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const isAdmin = user?.role === 'admin';
+
+  const load = async (which: Tab = tab) => {
+    if (!isAdmin) return;
+    setLoading(true);
+    try {
+      if (which === 'pending') {
+        const data = await adminApi.listFoundations('pending');
+        setPendingFoundations(data);
+      } else if (which === 'foundations') {
+        const data = await adminApi.listFoundations();
+        setFoundations(data);
+      } else if (which === 'adopters') {
+        const data = await adminApi.listAdopters();
+        setAdopters(data);
+      } else if (which === 'pets') {
+        const data = await adminApi.listPets();
+        setPets(data);
+      }
+    } catch (err) {
+      ctx.showToast(extractApiError(err, 'No pudimos cargar los datos.'), 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAdmin) load(tab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, tab]);
+
+  const pendingCount = pendingFoundations.length;
+
+  const onApproveFoundation = async (f: AuthFoundation) => {
+    const ok = await ctx.confirm({
+      title: 'Aprobar fundación',
+      message: <>¿Aprobar la solicitud de <strong>{f.name}</strong>? Podrá publicar mascotas inmediatamente.</>,
+      confirmText: 'Aprobar',
+      tone: 'primary',
+    });
+    if (!ok) return;
+    setBusyId(`f-${f.id}`);
+    try {
+      await adminApi.approveFoundation(f.id);
+      ctx.showToast(`${f.name} aprobada`, 'success');
+      ctx.bumpFoundations();
+      await load();
+    } catch (err) {
+      ctx.showToast(extractApiError(err, 'No pudimos aprobar.'), 'error');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const onRejectFoundation = async (f: AuthFoundation) => {
+    const ok = await ctx.confirm({
+      title: 'Rechazar fundación',
+      message: <>¿Rechazar la solicitud de <strong>{f.name}</strong>?</>,
+      confirmText: 'Rechazar',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    setBusyId(`f-${f.id}`);
+    try {
+      await adminApi.rejectFoundation(f.id);
+      ctx.showToast(`${f.name} rechazada`, 'info');
+      await load();
+    } catch (err) {
+      ctx.showToast(extractApiError(err, 'No pudimos rechazar.'), 'error');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const onDeleteFoundation = async (f: AuthFoundation) => {
+    const ok = await ctx.confirm({
+      title: 'Eliminar fundación',
+      message: <>¿Eliminar permanentemente <strong>{f.name}</strong>? Se borrarán también sus mascotas y solicitudes. Esta acción no se puede deshacer.</>,
+      confirmText: 'Eliminar',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    setBusyId(`f-${f.id}`);
+    try {
+      await adminApi.deleteFoundation(f.id);
+      ctx.showToast(`${f.name} eliminada`, 'info');
+      ctx.bumpFoundations();
+      ctx.bumpPets();
+      await load();
+    } catch (err) {
+      ctx.showToast(extractApiError(err, 'No pudimos eliminar.'), 'error');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const onDeleteAdopter = async (a: AuthAdopter) => {
+    const ok = await ctx.confirm({
+      title: 'Eliminar adoptante',
+      message: <>¿Eliminar la cuenta de <strong>{a.fullName}</strong> ({a.email})?</>,
+      confirmText: 'Eliminar',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    setBusyId(`a-${a.id}`);
+    try {
+      await adminApi.deleteAdopter(a.id);
+      ctx.showToast(`${a.fullName} eliminado`, 'info');
+      await load();
+    } catch (err) {
+      ctx.showToast(extractApiError(err, 'No pudimos eliminar.'), 'error');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const onDeletePet = async (pet: Pet) => {
+    const ok = await ctx.confirm({
+      title: 'Eliminar mascota',
+      message: <>¿Eliminar la publicación de <strong>{pet.name}</strong>?</>,
+      confirmText: 'Eliminar',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    setBusyId(`p-${pet.id}`);
+    try {
+      await adminApi.deletePet(pet.id);
+      ctx.showToast(`Publicación de ${pet.name} eliminada`, 'info');
+      ctx.bumpPets();
+      ctx.bumpFoundations();
+      await load();
+    } catch (err) {
+      ctx.showToast(extractApiError(err, 'No pudimos eliminar.'), 'error');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const adminProfile = useMemo(
+    () => (user?.role === 'admin' ? user.profile : null),
+    [user],
+  );
+
+  if (authLoading) {
+    return <section className="admin-page"><div className="container"><p>Cargando…</p></div></section>;
+  }
+
+  if (!isAdmin) {
+    return (
+      <section className="admin-page">
+        <div className="container">
+          <div className="admin-empty">
+            <h2 className="display-md">Acceso restringido</h2>
+            <p>Esta página es solo para administradores. Si tienes una cuenta admin, inicia sesión.</p>
+            <button className="btn btn--amber btn--lg" onClick={ctx.openLogin}>Iniciar sesión</button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="admin-page">
+      <div className="container">
+        <header className="admin-header">
+          <div className="eyebrow">
+            <span className="eyebrow__line" aria-hidden="true" />
+            <span className="eyebrow__text">Panel de administración</span>
+          </div>
+          <h1 className="display-md">Hola, {adminProfile?.fullName ?? 'admin'}</h1>
+          <p className="admin-subtitle">
+            Gestiona solicitudes de fundaciones, cuentas y publicaciones desde aquí.
+          </p>
+        </header>
+
+        <nav className="admin-tabs" role="tablist">
+          {(['pending', 'foundations', 'adopters', 'pets'] as Tab[]).map((t) => (
+            <button
+              key={t}
+              role="tab"
+              className={`admin-tab${tab === t ? ' admin-tab--active' : ''}`}
+              onClick={() => setTab(t)}
+            >
+              {TAB_LABEL[t]}
+              {t === 'pending' && pendingCount > 0 && (
+                <span className="admin-tab__badge">{pendingCount}</span>
+              )}
+            </button>
+          ))}
+        </nav>
+
+        {loading && <p className="admin-loading">Cargando…</p>}
+
+        {!loading && tab === 'pending' && (
+          pendingFoundations.length === 0 ? (
+            <div className="admin-empty">
+              <p>No hay solicitudes pendientes de revisión.</p>
+            </div>
+          ) : (
+            <ul className="admin-list">
+              {pendingFoundations.map((f) => (
+                <li key={f.id} className="admin-row">
+                  <div className="admin-row__avatar" style={{ background: `linear-gradient(135deg, ${f.gradientFrom}, ${f.gradientTo})` }}>
+                    {f.initial}
+                  </div>
+                  <div className="admin-row__main">
+                    <strong>{f.name}</strong>
+                    <span className="admin-row__meta">📍 {f.city} · {f.email}</span>
+                    {f.phone && <span className="admin-row__meta">📞 {f.phone}</span>}
+                    {f.description && <p className="admin-row__desc">"{f.description}"</p>}
+                  </div>
+                  <div className="admin-row__actions">
+                    <button
+                      className="btn-ghost-danger"
+                      disabled={busyId === `f-${f.id}`}
+                      onClick={() => onRejectFoundation(f)}
+                    >
+                      Rechazar
+                    </button>
+                    <button
+                      className="btn-solid-success"
+                      disabled={busyId === `f-${f.id}`}
+                      onClick={() => onApproveFoundation(f)}
+                    >
+                      {busyId === `f-${f.id}` ? '…' : 'Aprobar'}
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )
+        )}
+
+        {!loading && tab === 'foundations' && (
+          foundations.length === 0 ? (
+            <div className="admin-empty"><p>No hay fundaciones registradas.</p></div>
+          ) : (
+            <ul className="admin-list">
+              {foundations.map((f) => (
+                <li key={f.id} className="admin-row">
+                  <div className="admin-row__avatar" style={{ background: `linear-gradient(135deg, ${f.gradientFrom}, ${f.gradientTo})` }}>
+                    {f.initial}
+                  </div>
+                  <div className="admin-row__main">
+                    <strong>
+                      <Link to={`/refugios/${f.id}`}>{f.name}</Link>
+                    </strong>
+                    <span className="admin-row__meta">📍 {f.city} · {f.email}</span>
+                    <div className="admin-row__chips">
+                      <span className={`admin-status admin-status--${f.status}`}>{STATUS_LABEL[f.status]}</span>
+                      <span className="admin-row__meta">{f.animals} mascotas · {f.adoptions} adopciones</span>
+                    </div>
+                  </div>
+                  <div className="admin-row__actions">
+                    <button
+                      className="btn-ghost-danger"
+                      disabled={busyId === `f-${f.id}`}
+                      onClick={() => onDeleteFoundation(f)}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )
+        )}
+
+        {!loading && tab === 'adopters' && (
+          adopters.length === 0 ? (
+            <div className="admin-empty"><p>No hay adoptantes registrados.</p></div>
+          ) : (
+            <ul className="admin-list">
+              {adopters.map((a) => (
+                <li key={a.id} className="admin-row">
+                  <div className="admin-row__avatar admin-row__avatar--adopter">
+                    {a.avatarUrl
+                      ? <img src={a.avatarUrl} alt="" />
+                      : a.fullName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="admin-row__main">
+                    <strong>{a.fullName}</strong>
+                    <span className="admin-row__meta">{a.email}</span>
+                    {a.city && <span className="admin-row__meta">📍 {a.city}</span>}
+                    {a.phone && <span className="admin-row__meta">📞 {a.phone}</span>}
+                  </div>
+                  <div className="admin-row__actions">
+                    <button
+                      className="btn-ghost-danger"
+                      disabled={busyId === `a-${a.id}`}
+                      onClick={() => onDeleteAdopter(a)}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )
+        )}
+
+        {!loading && tab === 'pets' && (
+          pets.length === 0 ? (
+            <div className="admin-empty"><p>No hay mascotas publicadas.</p></div>
+          ) : (
+            <ul className="admin-list admin-list--pets">
+              {pets.map((p) => (
+                <li key={p.id} className="admin-row">
+                  <div className="admin-row__pet-img">
+                    {p.imageUrl
+                      ? <img src={p.imageUrl} alt="" />
+                      : <div style={{ background: `linear-gradient(140deg, ${p.gradientFrom}, ${p.gradientTo})` }}>
+                          {p.type === 'Perro' ? '🐶' : '🐱'}
+                        </div>
+                    }
+                  </div>
+                  <div className="admin-row__main">
+                    <strong>{p.name} {p.isAdopted && <span className="admin-status admin-status--approved">Adoptada</span>}</strong>
+                    <span className="admin-row__meta">{p.breed} · {p.age} · {p.city}</span>
+                    <span className="admin-row__meta">Refugio: {p.shelter}</span>
+                  </div>
+                  <div className="admin-row__actions">
+                    <button
+                      className="btn-ghost-danger"
+                      disabled={busyId === `p-${p.id}`}
+                      onClick={() => onDeletePet(p)}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )
+        )}
+      </div>
+    </section>
+  );
+}

@@ -1,0 +1,292 @@
+/* ── Resumen de monto ── */
+.donation-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(196, 129, 58, 0.08);
+  border: 1.5px solid rgba(196, 129, 58, 0.22);
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+}
+.donation-summary__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-mid);
+}
+.donation-summary__amount {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--amber);
+  font-family: 'Playfair Display', serif;
+}
+
+/* ── Tarjeta visual ── */
+.card-preview {
+  width: 100%;
+  height: 160px;
+  perspective: 800px;
+  margin-bottom: 22px;
+}
+
+.card-preview__front,
+.card-preview__back {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  padding: 20px 22px;
+  backface-visibility: hidden;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.card-preview {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.card-preview--flip { transform: rotateY(180deg); }
+
+.card-preview__front {
+  background: linear-gradient(135deg, #2d5a3d 0%, #4a8a60 60%, #6aa880 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 16px 40px rgba(21, 42, 30, 0.28);
+}
+
+.card-preview__back {
+  background: linear-gradient(135deg, #1e3d2a, #3a6a4a);
+  transform: rotateY(180deg);
+  box-shadow: 0 16px 40px rgba(21, 42, 30, 0.28);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.card-preview__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-preview__chip {
+  width: 36px;
+  height: 26px;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #d4a843, #f0c86a);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.card-preview__num {
+  font-size: 1.05rem;
+  letter-spacing: 0.18em;
+  color: #fff;
+  font-family: 'DM Mono', 'Courier New', monospace;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.card-preview__bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.card-preview__holder {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  letter-spacing: 0.06em;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-preview__exp {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.75);
+  letter-spacing: 0.08em;
+  font-family: 'DM Mono', 'Courier New', monospace;
+}
+
+/* Card brands */
+.card-brand--visa {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0.08em;
+  font-style: italic;
+}
+
+.card-brand--mc {
+  display: flex;
+  align-items: center;
+}
+.mc-circle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  opacity: 0.9;
+}
+.mc-circle--l { background: #eb001b; margin-right: -8px; }
+.mc-circle--r { background: #f79e1b; }
+
+.card-brand--amex {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: rgba(255,255,255,0.9);
+  letter-spacing: 0.12em;
+  background: rgba(255,255,255,0.15);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+/* Card back */
+.card-preview__stripe {
+  height: 36px;
+  background: rgba(0,0,0,0.45);
+  margin: -20px -22px 14px;
+  border-radius: 0;
+}
+
+.card-preview__cvv-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 6px;
+  padding: 8px 14px;
+  align-self: flex-end;
+  margin-right: 12px;
+}
+
+.card-preview__cvv-label {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.65);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.card-preview__cvv-val {
+  font-size: 0.9rem;
+  color: #fff;
+  font-family: 'DM Mono', 'Courier New', monospace;
+  letter-spacing: 0.15em;
+}
+
+/* ── Campos del formulario ── */
+.donation-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.dfield {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.dfield__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--forest-deep);
+  letter-spacing: 0.01em;
+}
+
+.dfield__label span { color: var(--amber); }
+
+.dfield input {
+  width: 100%;
+  padding: 11px 13px;
+  font-family: inherit;
+  font-size: 0.93rem;
+  color: var(--text-dark);
+  background: #fff;
+  border: 1.5px solid var(--cream-dark);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.dfield input:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px rgba(212, 120, 58, 0.18);
+}
+
+.dfield--error input {
+  border-color: #c4453a;
+}
+
+.dfield--error input:focus {
+  box-shadow: 0 0 0 3px rgba(196, 69, 58, 0.18);
+}
+
+.dfield__err {
+  font-size: 0.75rem;
+  color: #c4453a;
+  font-weight: 500;
+}
+
+.dfield-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ── Pantalla de éxito ── */
+.donation-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 12px 0 8px;
+  gap: 10px;
+}
+
+.donation-success__icon {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: rgba(74, 122, 90, 0.12);
+  border: 2px solid rgba(74, 122, 90, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--forest);
+  margin-bottom: 4px;
+}
+
+.donation-success__title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--forest-deep);
+  margin: 0;
+}
+
+.donation-success__amount {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--amber);
+  font-family: 'Playfair Display', serif;
+  margin: 0;
+}
+
+.donation-success__msg {
+  font-size: 0.9rem;
+  color: var(--text-mid);
+  line-height: 1.6;
+  max-width: 300px;
+  margin: 0 0 8px;
+}
+
+/* ── Botón de donate reutilizado ── */
+.donation-form .btn-donate,
+.donation-success .btn-donate {
+  width: 100%;
+  justify-content: center;
+}

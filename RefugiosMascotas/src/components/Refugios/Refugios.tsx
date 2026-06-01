@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useReveal } from '../../hooks/useReveal';
-import { refugios } from '../../data/refugios';
+import { foundationsApi } from '../../api/foundations';
+import { refugios as fallbackRefugios } from '../../data/refugios';
 import type { Refugio } from '../../types';
 import './Refugios.css';
 
@@ -12,10 +14,11 @@ const LocationIcon = () => (
 );
 
 function RefugioCard({ refugio, delay = 0 }: { refugio: Refugio; delay?: number }) {
-  const ref = useReveal<HTMLDivElement>();
+  const ref = useReveal<HTMLAnchorElement>();
 
   return (
-    <div
+    <Link
+      to={`/refugios/${refugio.id}`}
       className="refugio-card reveal"
       ref={ref}
       style={{ transitionDelay: `${delay}s` }}
@@ -47,12 +50,43 @@ function RefugioCard({ refugio, delay = 0 }: { refugio: Refugio; delay?: number 
           <span className="refugio-stat__label">Años activos</span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
-export default function Refugios() {
+interface Props {
+  refreshKey?: number;
+}
+
+export default function Refugios({ refreshKey }: Props) {
   const headerRef = useReveal<HTMLDivElement>();
+  const [refugios, setRefugios] = useState<Refugio[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [usingFallback, setUsingFallback] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    foundationsApi
+      .list()
+      .then((data) => {
+        if (!alive) return;
+        if (data.length === 0) {
+          setRefugios(fallbackRefugios);
+          setUsingFallback(true);
+        } else {
+          setRefugios(data);
+          setUsingFallback(false);
+        }
+      })
+      .catch(() => {
+        if (!alive) return;
+        setRefugios(fallbackRefugios);
+        setUsingFallback(true);
+      })
+      .finally(() => alive && setLoading(false));
+    return () => { alive = false; };
+  }, [refreshKey]);
 
   return (
     <section className="section-refugios" id="refugios" aria-labelledby="refugios-title">
@@ -84,19 +118,33 @@ export default function Refugios() {
           </Link>
         </div>
 
+        {usingFallback && !loading && (
+          <p className="refugios-fallback-note">
+            Mostrando red de ejemplo — todavía no hay refugios registrados o el back no está disponible.
+          </p>
+        )}
+
         <div className="refugios-grid">
-          {refugios.map((r, i) => (
-            <RefugioCard key={r.id} refugio={r} delay={(i % 3) * 0.1} />
-          ))}
+          {loading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="refugio-card refugio-card--skeleton" aria-hidden="true">
+                  <div className="refugio-card__avatar refugio-card__avatar--skeleton" />
+                  <div className="skeleton-line skeleton-line--lg" />
+                  <div className="skeleton-line skeleton-line--sm" />
+                </div>
+              ))
+            : refugios.map((r, i) => (
+                <RefugioCard key={r.id} refugio={r} delay={(i % 3) * 0.1} />
+              ))}
         </div>
 
         <div className="refugios-cta">
-          <a href="#" className="btn-outline-cream">
+          <Link to="/refugios" className="btn-outline-cream">
             Ver todos los refugios
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
-          </a>
+          </Link>
         </div>
       </div>
     </section>

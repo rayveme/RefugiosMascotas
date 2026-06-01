@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useReveal } from "../../hooks/useReveal";
 import type { DonationFrequency } from "../../types";
+import DonationModal from "./DonationModal";
 import "./Donation.css";
 
 const AMOUNTS = [5, 10, 25, 50, 100] as const;
@@ -44,6 +45,7 @@ export default function Donation() {
   const [freq, setFreq] = useState<DonationFrequency>("monthly");
   const [amount, setAmount] = useState<Amount>(25);
   const [custom, setCustom] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
 
   const leftRef = useReveal<HTMLDivElement>();
   const rightRef = useReveal<HTMLDivElement>();
@@ -56,6 +58,7 @@ export default function Donation() {
       : "Selecciona un monto para ver tu impacto.";
 
   return (
+    <>
     <section className="section-donar" id="donar" aria-labelledby="donar-title">
       <div className="container donar-grid">
         {/* Left */}
@@ -170,7 +173,7 @@ export default function Donation() {
               <p className="impact-preview__text">{impactText}</p>
             </div>
 
-            <button className="btn-donate" type="button">
+            <button className="btn-donate" type="button" onClick={() => setModalOpen(true)}>
               Donar ahora
               <svg
                 width="15"
@@ -209,5 +212,14 @@ export default function Donation() {
         </div>
       </div>
     </section>
+
+      <DonationModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        amount={amount}
+        custom={custom}
+        freq={freq}
+      />
+    </>
   );
 }
