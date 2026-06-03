@@ -37,6 +37,9 @@ _ENSURE_COLUMNS = [
     "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS whatsapp    VARCHAR(30)",
     "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS website     VARCHAR(255)",
     "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS responsible VARCHAR(120)",
+    # Google OAuth — google_id en adoptantes y fundaciones
+    "ALTER TABLE adopters    ADD COLUMN IF NOT EXISTS google_id VARCHAR(64) UNIQUE",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS google_id VARCHAR(64) UNIQUE",
 ]
 
 
