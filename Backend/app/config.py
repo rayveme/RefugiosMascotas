@@ -78,8 +78,14 @@ class Settings(BaseSettings):
 
     @property
     def sync_database_url(self) -> str:
-        """Versión síncrona de la URL para Alembic (psycopg2)."""
-        return self.database_url.replace("+asyncpg", "+psycopg2")
+        """Versión síncrona de la URL para Alembic (psycopg2).
+
+        asyncpg usa ?ssl=require; psycopg2 usa ?sslmode=require.
+        """
+        url = self.database_url.replace("+asyncpg", "+psycopg2")
+        url = url.replace("ssl=require", "sslmode=require")
+        url = url.replace("ssl=prefer", "sslmode=prefer")
+        return url
 
     @property
     def cors_allowed_origins(self) -> list[str]:
