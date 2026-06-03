@@ -1,3 +1,61 @@
+/* ── Próximamente ── */
+.donation-coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 12px 8px 4px;
+  gap: 14px;
+}
+.donation-coming-soon__icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(196,129,58,.15), rgba(196,129,58,.08));
+  border: 2px solid rgba(196,129,58,.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--amber, #c4813a);
+}
+.donation-coming-soon__title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-dark, #2d2d2d);
+  margin: 0;
+}
+.donation-coming-soon__amount {
+  font-size: 0.95rem;
+  color: var(--text-mid, #666);
+  margin: 0;
+}
+.donation-coming-soon__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(196,129,58,.1);
+  border: 1.5px solid rgba(196,129,58,.3);
+  color: var(--amber, #c4813a);
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: 999px;
+  letter-spacing: 0.03em;
+}
+.donation-coming-soon__msg {
+  font-size: 0.92rem;
+  color: var(--text-mid, #555);
+  line-height: 1.6;
+  max-width: 360px;
+  margin: 0;
+}
+.donation-coming-soon__note {
+  font-size: 0.82rem;
+  color: var(--text-muted, #888);
+  margin: 0;
+  padding-bottom: 4px;
+}
+
 /* ── Resumen de monto ── */
 .donation-summary {
   display: flex;

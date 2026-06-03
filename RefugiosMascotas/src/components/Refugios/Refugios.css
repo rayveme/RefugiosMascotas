@@ -200,13 +200,22 @@
   transform: translateY(-2px);
 }
 
-.refugios-fallback-note {
-  margin: -20px 0 28px;
-  font-size: 0.82rem;
-  color: rgba(250, 243, 228, 0.55);
-  font-style: italic;
+.refugios-empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 24px;
   position: relative;
   z-index: 1;
+}
+.refugios-empty-state__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--cream, #faf3e4);
+  margin-bottom: 8px;
+}
+.refugios-empty-state__sub {
+  font-size: 0.9rem;
+  color: rgba(250, 243, 228, 0.6);
 }
 
 .refugio-card--skeleton {
