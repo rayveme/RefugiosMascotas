@@ -1,7 +1,8 @@
 import axios, { AxiosError, type AxiosInstance } from 'axios';
 import { authCallbacks, authStorage } from '../services/auth.service';
 
-const baseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
+const baseURL = import.meta.env.VITE_API_URL
+  ?? (import.meta.env.PROD ? 'https://refugiosmascotas-production.up.railway.app' : 'http://localhost:8000');
 
 // No fijamos `Content-Type` global: axios lo decide solo según el payload
 // (`application/json` para objetos, `multipart/form-data; boundary=...` para FormData).
