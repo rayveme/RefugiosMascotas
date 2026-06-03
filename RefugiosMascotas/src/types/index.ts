@@ -16,6 +16,18 @@ export interface Pet {
   sterilized?: boolean;
   gradientFrom: string;
   gradientTo: string;
+  // Campos del API
+  isAdopted?: boolean;
+  foundationId?: number;
+  imageUrl?: string | null;
+  imagePublicId?: string | null;
+  // Campos de detalle / datos locales
+  photos?: string[];
+  description?: string;
+  gender?: string;
+  weight?: string;
+  diseases?: string;
+  vaccines?: Vaccine[];
 }
 
 export interface Refugio {
