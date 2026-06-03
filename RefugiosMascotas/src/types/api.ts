@@ -65,6 +65,7 @@ export interface PetApi {
   city: string;
   urgent: boolean;
   vaccinated: boolean;
+  photo: string | null;
   sterilized: boolean;
   gradient_from: string;
   gradient_to: string;

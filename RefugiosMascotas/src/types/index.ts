@@ -1,20 +1,21 @@
+export interface Vaccine {
+  name: string;
+  done: boolean;
+}
+
 export interface Pet {
   id: number;
   name: string;
-  type: 'Perro' | 'Gato';
+  type: string;
   breed: string;
   age: string;
   shelter: string;
   city: string;
   urgent?: boolean;
-  vaccinated: boolean;
+  vaccinated?: boolean;
   sterilized?: boolean;
   gradientFrom: string;
   gradientTo: string;
-  isAdopted?: boolean;
-  foundationId?: number;
-  imageUrl?: string | null;
-  imagePublicId?: string | null;
 }
 
 export interface Refugio {

@@ -9,6 +9,7 @@ interface Props {
   onRegisterClick: () => void;
   onPublishPetClick: () => void;
   onEditProfileClick: () => void;
+  onAgendarCitaClick: () => void;
 }
 
 export default function Navbar({
@@ -16,6 +17,7 @@ export default function Navbar({
   onRegisterClick,
   onPublishPetClick,
   onEditProfileClick,
+  onAgendarCitaClick,
 }: Props) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -90,7 +92,12 @@ export default function Navbar({
             <a href={onHome ? '#donar' : '/#donar'} onClick={closeMenu}>Dona</a>
           </li>
           <li>
-            <a href={onHome ? '#cita' : '/#cita'} onClick={closeMenu}>Agendar Cita</a>
+            <button
+              className="navbar__link-btn"
+              onClick={() => { closeMenu(); onAgendarCitaClick(); }}
+            >
+              Agendar Cita
+            </button>
           </li>
         </ul>
 
