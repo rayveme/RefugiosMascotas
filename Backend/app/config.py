@@ -54,14 +54,22 @@ class Settings(BaseSettings):
     @field_validator("database_url", mode="before")
     @classmethod
     def _normalize_db_url(cls, v: str) -> str:
-        """Railway y otros proveedores entregan URLs estilo `postgres://` o
-        `postgresql://`. Normalizamos al driver async que usa la app."""
+        """Normaliza URLs de distintos proveedores al formato asyncpg.
+
+        - Railway: postgres:// o postgresql://
+        - Neon: postgresql://...?sslmode=require  →  ?ssl=require
+        - asyncpg no acepta sslmode como query param, usa ssl=require.
+        """
         if not v:
             return v
+        # Normalizar esquema
         if v.startswith("postgres://"):
-            v = "postgresql://" + v[len("postgres://") :]
-        if v.startswith("postgresql://"):
-            v = "postgresql+asyncpg://" + v[len("postgresql://") :]
+            v = "postgresql://" + v[len("postgres://"):]
+        if v.startswith("postgresql://") and "+asyncpg" not in v:
+            v = "postgresql+asyncpg://" + v[len("postgresql://"):]
+        # Neon y otros usan sslmode=require; asyncpg necesita ssl=require
+        v = v.replace("sslmode=require", "ssl=require")
+        v = v.replace("sslmode=prefer", "ssl=prefer")
         return v
 
     @property
