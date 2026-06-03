@@ -33,6 +33,16 @@ class Foundation(Base, TimestampMixin):
     description: Mapped[str | None] = mapped_column(String(1000), default=None)
     phone: Mapped[str | None] = mapped_column(String(30), default=None)
 
+    # ── Ubicación ─────────────────────────────────────────────────────────────
+    address: Mapped[str | None] = mapped_column(String(255), default=None)
+    state: Mapped[str | None] = mapped_column(String(80), default=None)
+    postal_code: Mapped[str | None] = mapped_column(String(10), default=None)
+
+    # ── Contacto adicional ────────────────────────────────────────────────────
+    whatsapp: Mapped[str | None] = mapped_column(String(30), default=None)
+    website: Mapped[str | None] = mapped_column(String(255), default=None)
+    responsible: Mapped[str | None] = mapped_column(String(120), default=None)
+
     years: Mapped[int] = mapped_column(Integer, default=0)
     adoptions: Mapped[int] = mapped_column(Integer, default=0)
 

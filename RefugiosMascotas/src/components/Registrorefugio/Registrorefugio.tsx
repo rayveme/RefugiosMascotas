@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { notify } from '../../services/notify.service';
+import { useAuth } from '../../hooks/useAuth';
+import { extractApiError } from '../../api/client';
 import type { ShellContext } from '../../types/shell';
 import './Registrorefugio.css';
 
@@ -94,10 +96,13 @@ function CheckPill({
 export default function RegistroRefugio() {
   const navigate = useNavigate();
   const ctx = useOutletContext<ShellContext>();
+  const { registerFoundation } = useAuth();
   const [step, setStep]           = useState<Step>(1);
   const [form, setForm]           = useState<FormState>(INITIAL_FORM);
   const [errors, setErrors]       = useState<Partial<Record<keyof FormState, string>>>({});
-  const [submitted] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [apiError, setApiError]   = useState<string | null>(null);
 
   // helpers
   const set = (key: keyof FormState, val: string) =>
@@ -141,11 +146,58 @@ export default function RegistroRefugio() {
 
   const next  = () => { if (validate()) setStep(s => Math.min(s + 1, 4) as Step); };
   const prev  = () => setStep(s => Math.max(s - 1, 1) as Step);
-const submit = () => {
-  if (validate()) {
-    navigate('/dashboard');  // o la ruta que hayas definido
-  }
-};
+const submit = async () => {
+    if (!validate()) return;
+    setApiError(null);
+    setSubmitting(true);
+    try {
+      // Construir descripción enriquecida con los campos extra del formulario
+      const tipoLabel: Record<string, string> = {
+        publica: 'Pública / Municipal', privada: 'Privada',
+        ong: 'ONG / Asociación Civil', informal: 'Grupo informal',
+      };
+      const extraLines: string[] = [];
+      if (form.tipo)              extraLines.push(`Tipo: ${tipoLabel[form.tipo] ?? form.tipo}`);
+      if (form.animales.length)   extraLines.push(`Animales: ${form.animales.join(', ')}`);
+      if (form.servicios.length)  extraLines.push(`Servicios: ${form.servicios.join(', ')}`);
+      if (form.capacidad)         extraLines.push(`Capacidad: ${form.capacidad} animales`);
+      const fullDescription = [form.descripcion, ...extraLines].filter(Boolean).join('\n');
+
+      // Calcular años de operación desde el año de fundación
+      const foundingYear = parseInt(form.anio, 10);
+      const yearsOp = form.anio && !isNaN(foundingYear)
+        ? Math.max(0, new Date().getFullYear() - foundingYear)
+        : 0;
+
+      // Dirección completa
+      const fullAddress = [form.calle, form.colonia].filter(Boolean).join(', ');
+
+      await registerFoundation({
+        email:        form.emailCuenta.trim(),
+        password:     form.password,
+        name:         form.nombre.trim(),
+        city:         form.ciudad.trim(),
+        phone:        form.telefono.trim() || undefined,
+        description:  fullDescription || undefined,
+        years:        yearsOp,
+        // Ubicación
+        address:      fullAddress || undefined,
+        state:        form.estado || undefined,
+        postal_code:  form.cp || undefined,
+        // Contacto adicional
+        whatsapp:     form.whatsapp.trim() || undefined,
+        website:      form.sitio.trim() || undefined,
+        responsible:  form.responsable.trim() || undefined,
+      });
+
+      setSubmitted(true);
+      notify.success('¡Refugio registrado! Revisaremos tu solicitud en las próximas 24 h.');
+    } catch (err) {
+      setApiError(extractApiError(err, 'No pudimos registrar el refugio. Intenta de nuevo.'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
   // ── Success screen ──────────────────────────────────────────────────────────
   if (submitted) {
     return (
@@ -431,9 +483,12 @@ const submit = () => {
         </div>
 
         {/* Navigation */}
+        {apiError && (
+          <div className="rr-api-error" role="alert">{apiError}</div>
+        )}
         <div className="rr-nav">
           {step > 1 && (
-            <button className="rr-btn-secondary" onClick={prev}>
+            <button className="rr-btn-secondary" onClick={prev} disabled={submitting}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M19 12H5M12 5l-7 7 7 7" />
               </svg>
@@ -443,8 +498,11 @@ const submit = () => {
           <button
             className="rr-btn-primary"
             onClick={step === 4 ? submit : next}
+            disabled={submitting}
           >
-            {step === 4 ? 'Registrar refugio 🐾' : 'Continuar'}
+            {step === 4
+              ? (submitting ? 'Registrando…' : 'Registrar refugio 🐾')
+              : 'Continuar'}
             {step < 4 && (
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M5 12h14M12 5l7 7-7 7" />

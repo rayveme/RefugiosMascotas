@@ -90,7 +90,7 @@ async def upload_my_documents(
 ) -> AdopterRead:
     folder = _docs_folder()
 
-    # ── Perfil del hogar (texto) ────────────────────────────────────────────
+    # ── Perfil del hogar (texto) — se guarda aunque el upload de archivos falle ──
     if housing_type is not None:
         adopter.housing_type = housing_type or None
     if has_garden is not None:
@@ -104,28 +104,48 @@ async def upload_my_documents(
     if adoption_reason is not None:
         adopter.adoption_reason = adoption_reason or None
 
-    # ── Documentos (archivos → Cloudinary) ─────────────────────────────────
+    # Commit inmediato del perfil textual: esto persiste aunque los uploads fallen
+    await session.commit()
+
+    # ── Documentos (archivos → Cloudinary) ─────────────────────────────────────
+    # Cada upload se intenta de forma independiente; un fallo no revierte los demás.
     if id_front and id_front.filename:
-        adopter.id_front_url = await _upload_file(id_front, folder, ALLOWED_DOC_MIME)
+        try:
+            adopter.id_front_url = await _upload_file(id_front, folder, ALLOWED_DOC_MIME)
+        except Exception:
+            pass
 
     if id_back and id_back.filename:
-        adopter.id_back_url = await _upload_file(id_back, folder, ALLOWED_DOC_MIME)
+        try:
+            adopter.id_back_url = await _upload_file(id_back, folder, ALLOWED_DOC_MIME)
+        except Exception:
+            pass
 
     if proof_address and proof_address.filename:
-        adopter.proof_address_url = await _upload_file(proof_address, folder, ALLOWED_DOC_MIME)
+        try:
+            adopter.proof_address_url = await _upload_file(proof_address, folder, ALLOWED_DOC_MIME)
+        except Exception:
+            pass
 
     if home_photos:
         urls: list[str] = []
-        for photo in home_photos[:4]:   # máximo 4 fotos
+        for photo in home_photos[:4]:
             if photo.filename:
-                url = await _upload_file(photo, folder, ALLOWED_IMG_MIME)
-                urls.append(url)
+                try:
+                    url = await _upload_file(photo, folder, ALLOWED_IMG_MIME)
+                    urls.append(url)
+                except Exception:
+                    pass
         if urls:
             adopter.home_photo_urls = "|".join(urls)
 
     if signature and signature.filename:
-        adopter.signature_url = await _upload_file(signature, folder, ALLOWED_IMG_MIME)
+        try:
+            adopter.signature_url = await _upload_file(signature, folder, ALLOWED_IMG_MIME)
+        except Exception:
+            pass
 
+    # Segundo commit: sólo si algo cambió (los atributos URL)
     await session.commit()
     await session.refresh(adopter)
     return AdopterRead.model_validate(adopter)

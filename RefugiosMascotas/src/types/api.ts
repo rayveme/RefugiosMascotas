@@ -106,6 +106,14 @@ export interface FoundationRegisterPayload {
   description?: string;
   phone?: string;
   years?: number;
+  // Ubicación adicional
+  address?: string;
+  state?: string;
+  postal_code?: string;
+  // Contacto adicional
+  whatsapp?: string;
+  website?: string;
+  responsible?: string;
 }
 
 export interface LoginPayload {

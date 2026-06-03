@@ -89,6 +89,14 @@ async def register_foundation(
         years=payload.years,
         initial=payload.name[:1].upper(),
         password_hash=hash_password(payload.password),
+        # Ubicación adicional (opcionales)
+        address=payload.address,
+        state=payload.state,
+        postal_code=payload.postal_code,
+        # Contacto adicional (opcionales)
+        whatsapp=payload.whatsapp,
+        website=payload.website,
+        responsible=payload.responsible,
     )
     session.add(foundation)
     await session.commit()

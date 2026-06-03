@@ -14,6 +14,14 @@ class FoundationBase(BaseModel):
     initial: str = Field("?", min_length=1, max_length=2)
     gradient_from: str = Field("#C4813A", pattern=r"^#[0-9A-Fa-f]{6,8}$")
     gradient_to: str = Field("#E8A060", pattern=r"^#[0-9A-Fa-f]{6,8}$")
+    # Ubicación adicional
+    address: str | None = None
+    state: str | None = None
+    postal_code: str | None = None
+    # Contacto adicional
+    whatsapp: str | None = None
+    website: str | None = None
+    responsible: str | None = None
 
     @field_validator("initial")
     @classmethod
@@ -30,6 +38,14 @@ class FoundationUpdate(BaseModel):
     initial: str | None = Field(None, min_length=1, max_length=2)
     gradient_from: str | None = Field(None, pattern=r"^#[0-9A-Fa-f]{6,8}$")
     gradient_to: str | None = Field(None, pattern=r"^#[0-9A-Fa-f]{6,8}$")
+    # Ubicación adicional
+    address: str | None = Field(None, max_length=255)
+    state: str | None = Field(None, max_length=80)
+    postal_code: str | None = Field(None, max_length=10)
+    # Contacto adicional
+    whatsapp: str | None = Field(None, max_length=30)
+    website: str | None = Field(None, max_length=255)
+    responsible: str | None = Field(None, max_length=120)
     # `adoptions` se actualiza solo desde el endpoint /pets/{id}/adopt — no exponer aquí.
 
 
