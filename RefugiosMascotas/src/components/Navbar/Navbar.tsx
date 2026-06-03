@@ -105,7 +105,7 @@ export default function Navbar({
           )}
 
           {user?.role === 'admin' && (
-            <Link to="/admin" className="btn btn--amber navbar__cta">
+            <Link to="/admin" className="btn btn--amber navbar__cta" onClick={closeMenu}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M12 2L4 6v6c0 5 3.5 9.5 8 10 4.5-.5 8-5 8-10V6l-8-4z" />
               </svg>

@@ -91,6 +91,19 @@ export interface AdoptionAdopterSummary {
   phone: string | null;
   city: string | null;
   avatarUrl: string | null;
+  // Perfil del hogar
+  housingType: string | null;
+  hasGarden: boolean | null;
+  hasChildren: boolean | null;
+  hasOtherPets: boolean | null;
+  otherPetsDesc: string | null;
+  adoptionReason: string | null;
+  // Documentos (URLs Cloudinary)
+  idFrontUrl: string | null;
+  idBackUrl: string | null;
+  proofAddressUrl: string | null;
+  homePhotoUrls: string[];          // ya parseadas del pipe
+  signatureUrl: string | null;
 }
 
 export interface AdoptionRequest {

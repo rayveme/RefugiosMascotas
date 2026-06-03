@@ -1,110 +1,400 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import FormField from '../../ui/FormField/FormField';
 import { extractApiError } from '../../../api/client';
 import { useAuth } from '../../../hooks/useAuth';
+import { adoptersApi, dataUrlToBlob } from '../../../api/adopters';
+import { FileZone, SigPad, StepsBar, YNToggle } from './FormStepHelpers';
 
-interface Props {
-  onSuccess: () => void;
-}
+interface Props { onSuccess: () => void; }
+
+type Step = 1 | 2 | 3 | 4;
+const STEPS = ['Cuenta', 'Perfil', 'Documentos', 'Acta'];
 
 export default function AdopterRegisterForm({ onSuccess }: Props) {
   const { registerAdopter } = useAuth();
-  const [form, setForm] = useState({
-    full_name: '',
-    email: '',
-    password: '',
-    city: '',
-    phone: '',
-  });
+  const [step, setStep] = useState<Step>(1);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
-  const update =
-    (key: keyof typeof form) =>
-    (e: React.ChangeEvent<HTMLInputElement>) =>
-      setForm((f) => ({ ...f, [key]: e.target.value }));
+  /* ── Paso 1: datos de cuenta ──────────────────────────────────────────────── */
+  const [account, setAccount] = useState({ full_name: '', email: '', password: '' });
+  const [accErr, setAccErr] = useState<Partial<Record<keyof typeof account, string>>>({});
 
-  const onSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  /* ── Paso 2: perfil personal ──────────────────────────────────────────────── */
+  const [profile, setProfile] = useState({
+    city:            '',
+    phone:           '',
+    housing_type:    '',
+    has_garden:      null as boolean | null,
+    has_children:    null as boolean | null,
+    has_other_pets:  null as boolean | null,
+    other_pets_desc: '',
+    adoption_reason: '',
+  });
+  const [profErr, setProfErr] = useState<Record<string, string>>({});
+
+  /* ── Paso 3: documentos ───────────────────────────────────────────────────── */
+  const [docs, setDocs] = useState({
+    id_front:      [] as File[],
+    id_back:       [] as File[],
+    proof_address: [] as File[],
+    home_photos:   [] as File[],
+  });
+  const [docsErr, setDocsErr] = useState<Record<string, string>>({});
+
+  /* ── Paso 4: acta responsiva + firma ──────────────────────────────────────── */
+  const [agreed, setAgreed] = useState(false);
+  const [signature, setSignature] = useState<string | null>(null);
+  const [actaErr, setActaErr] = useState<Record<string, string>>({});
+
+  /* ── Validaciones ─────────────────────────────────────────────────────────── */
+  const v1 = () => {
+    const e: typeof accErr = {};
+    if (account.full_name.trim().length < 2) e.full_name = 'Mínimo 2 caracteres';
+    if (!account.email.includes('@'))        e.email    = 'Email inválido';
+    if (account.password.length < 8)         e.password = 'Mínimo 8 caracteres';
+    setAccErr(e);
+    return !Object.keys(e).length;
+  };
+
+  const v2 = () => {
+    const e: Record<string, string> = {};
+    if (!profile.city.trim())    e.city         = 'La ciudad es requerida';
+    if (!profile.phone.trim())   e.phone        = 'El teléfono es requerido';
+    if (!profile.housing_type)   e.housing_type = 'Selecciona el tipo de vivienda';
+    setProfErr(e);
+    return !Object.keys(e).length;
+  };
+
+  const v3 = () => {
+    const e: Record<string, string> = {};
+    if (!docs.id_front.length)      e.id_front      = 'Sube el frente de tu identificación';
+    if (!docs.id_back.length)       e.id_back       = 'Sube el reverso de tu identificación';
+    if (!docs.proof_address.length) e.proof_address = 'Sube un comprobante de domicilio';
+    if (!docs.home_photos.length)   e.home_photos   = 'Sube al menos una foto de tu hogar';
+    setDocsErr(e);
+    return !Object.keys(e).length;
+  };
+
+  const v4 = () => {
+    const e: Record<string, string> = {};
+    if (!agreed)    e.agreed    = 'Debes aceptar el acta responsiva';
+    if (!signature) e.signature = 'Tu firma es requerida';
+    setActaErr(e);
+    return !Object.keys(e).length;
+  };
+
+  const next = () => {
+    if (step === 1 && !v1()) return;
+    if (step === 2 && !v2()) return;
+    if (step === 3 && !v3()) return;
+    setStep((s) => (s + 1) as Step);
+  };
+
+  const submit = async () => {
+    if (!v4()) return;
+    setApiError(null);
     setSubmitting(true);
     try {
+      // 1 — Registrar la cuenta (guarda token en authStorage)
       await registerAdopter({
-        email: form.email.trim(),
-        password: form.password,
-        full_name: form.full_name.trim(),
-        city: form.city.trim() || undefined,
-        phone: form.phone.trim() || undefined,
+        email:     account.email.trim(),
+        password:  account.password,
+        full_name: account.full_name.trim(),
+        city:      profile.city.trim(),
+        phone:     profile.phone.trim(),
       });
+
+      // 2 — Subir documentos y perfil del hogar (no bloquea el registro si falla)
+      try {
+        await adoptersApi.uploadDocuments({
+          id_front:        docs.id_front[0],
+          id_back:         docs.id_back[0],
+          proof_address:   docs.proof_address[0],
+          home_photos:     docs.home_photos,
+          signature:       signature ? dataUrlToBlob(signature) : undefined,
+          housing_type:    profile.housing_type || undefined,
+          has_garden:      profile.has_garden,
+          has_children:    profile.has_children,
+          has_other_pets:  profile.has_other_pets,
+          other_pets_desc: profile.other_pets_desc || undefined,
+          adoption_reason: profile.adoption_reason || undefined,
+        });
+      } catch {
+        // Fallo no crítico: la cuenta ya fue creada.
+        // El adoptante puede actualizar sus documentos más adelante.
+      }
+
       onSuccess();
     } catch (err) {
-      setError(extractApiError(err, 'No pudimos crear tu cuenta'));
+      setApiError(extractApiError(err, 'No pudimos crear tu cuenta'));
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={onSubmit} className="form-grid" noValidate>
-      {error && <div className="form-error-banner">{error}</div>}
+    <div className="form-multistep">
+      <StepsBar current={step} labels={STEPS} onGoTo={(n) => setStep(n as Step)} />
+      {apiError && <div className="form-error-banner">{apiError}</div>}
 
-      <FormField
-        label="Nombre completo"
-        name="full_name"
-        autoComplete="name"
-        required
-        minLength={2}
-        value={form.full_name}
-        onChange={update('full_name')}
-      />
+      {/* ── Paso 1: Cuenta ─────────────────────────────────────────────────── */}
+      {step === 1 && (
+        <div className="form-grid">
+          <FormField
+            label="Nombre completo"
+            name="full_name"
+            autoComplete="name"
+            required
+            value={account.full_name}
+            error={accErr.full_name}
+            onChange={(e) => setAccount((a) => ({ ...a, full_name: e.target.value }))}
+          />
+          <div className="form-row">
+            <FormField
+              label="Correo electrónico"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={account.email}
+              error={accErr.email}
+              onChange={(e) => setAccount((a) => ({ ...a, email: e.target.value }))}
+            />
+            <FormField
+              label="Contraseña"
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              required
+              minLength={8}
+              hint="Mínimo 8 caracteres"
+              value={account.password}
+              error={accErr.password}
+              onChange={(e) => setAccount((a) => ({ ...a, password: e.target.value }))}
+            />
+          </div>
+        </div>
+      )}
 
-      <div className="form-row">
-        <FormField
-          label="Correo"
-          name="email"
-          type="email"
-          autoComplete="email"
-          required
-          value={form.email}
-          onChange={update('email')}
-        />
-        <FormField
-          label="Contraseña"
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          required
-          minLength={8}
-          hint="Mínimo 8 caracteres"
-          value={form.password}
-          onChange={update('password')}
-        />
-      </div>
+      {/* ── Paso 2: Perfil personal ─────────────────────────────────────────── */}
+      {step === 2 && (
+        <div className="form-grid">
+          <div className="form-row">
+            <FormField
+              label="Ciudad"
+              name="city"
+              required
+              value={profile.city}
+              error={profErr.city}
+              onChange={(e) => setProfile((p) => ({ ...p, city: e.target.value }))}
+            />
+            <FormField
+              label="Teléfono"
+              name="phone"
+              type="tel"
+              autoComplete="tel"
+              required
+              value={profile.phone}
+              error={profErr.phone}
+              onChange={(e) => setProfile((p) => ({ ...p, phone: e.target.value }))}
+            />
+          </div>
 
-      <div className="form-row">
-        <FormField
-          label="Ciudad"
-          name="city"
-          hint="Opcional. La pediremos al adoptar."
-          value={form.city}
-          onChange={update('city')}
-        />
-        <FormField
-          label="Teléfono"
-          name="phone"
-          type="tel"
-          autoComplete="tel"
-          hint="Opcional. La pediremos al adoptar."
-          value={form.phone}
-          onChange={update('phone')}
-        />
-      </div>
+          <FormField
+            variant="select"
+            label="Tipo de vivienda"
+            name="housing_type"
+            required
+            value={profile.housing_type}
+            error={profErr.housing_type}
+            onChange={(e) => setProfile((p) => ({ ...p, housing_type: e.target.value }))}
+          >
+            <option value="">Seleccionar…</option>
+            <option value="casa_propia">Casa propia</option>
+            <option value="casa_renta">Casa en renta</option>
+            <option value="depa_propio">Departamento propio</option>
+            <option value="depa_renta">Departamento en renta</option>
+            <option value="otro">Otro</option>
+          </FormField>
 
-      <div className="form-actions">
-        <button type="submit" className="btn btn--amber btn--lg btn--full" disabled={submitting}>
-          {submitting ? 'Creando cuenta…' : 'Crear cuenta'}
+          <div className="form-yn-grid">
+            <div className="form-yn-item">
+              <span className="field__label">¿Tiene jardín o patio?</span>
+              <YNToggle
+                value={profile.has_garden}
+                onChange={(v) => setProfile((p) => ({ ...p, has_garden: v }))}
+              />
+            </div>
+            <div className="form-yn-item">
+              <span className="field__label">¿Hay niños en casa?</span>
+              <YNToggle
+                value={profile.has_children}
+                onChange={(v) => setProfile((p) => ({ ...p, has_children: v }))}
+              />
+            </div>
+            <div className="form-yn-item">
+              <span className="field__label">¿Tienes otras mascotas?</span>
+              <YNToggle
+                value={profile.has_other_pets}
+                onChange={(v) => setProfile((p) => ({ ...p, has_other_pets: v }))}
+              />
+            </div>
+          </div>
+
+          {profile.has_other_pets === true && (
+            <FormField
+              variant="textarea"
+              label="¿Qué mascotas tienes actualmente?"
+              name="other_pets_desc"
+              rows={2}
+              hint="Especie, raza, edad y temperamento"
+              value={profile.other_pets_desc}
+              onChange={(e) => setProfile((p) => ({ ...p, other_pets_desc: e.target.value }))}
+            />
+          )}
+
+          <FormField
+            variant="textarea"
+            label="¿Por qué quieres adoptar?"
+            name="adoption_reason"
+            rows={3}
+            hint="Tu estilo de vida, experiencia con animales, qué esperas de la convivencia…"
+            value={profile.adoption_reason}
+            onChange={(e) => setProfile((p) => ({ ...p, adoption_reason: e.target.value }))}
+          />
+        </div>
+      )}
+
+      {/* ── Paso 3: Documentos ─────────────────────────────────────────────── */}
+      {step === 3 && (
+        <div className="form-grid">
+          <div className="form-section-label">Identificación oficial (INE · Pasaporte · Cédula)</div>
+
+          <div className="form-row">
+            <FileZone
+              label="Frente de la identificación"
+              hint="Foto clara y legible"
+              accept="image/*,.pdf"
+              required
+              files={docs.id_front}
+              onChange={(f) => setDocs((d) => ({ ...d, id_front: f }))}
+              error={docsErr.id_front}
+            />
+            <FileZone
+              label="Reverso de la identificación"
+              hint="Foto clara y legible"
+              accept="image/*,.pdf"
+              required
+              files={docs.id_back}
+              onChange={(f) => setDocs((d) => ({ ...d, id_back: f }))}
+              error={docsErr.id_back}
+            />
+          </div>
+
+          <FileZone
+            label="Comprobante de domicilio"
+            hint="Recibo de luz, agua o estado de cuenta — máx. 3 meses de antigüedad"
+            accept="image/*,.pdf"
+            required
+            files={docs.proof_address}
+            onChange={(f) => setDocs((d) => ({ ...d, proof_address: f }))}
+            error={docsErr.proof_address}
+          />
+
+          <FileZone
+            label="Fotos de tu hogar"
+            hint="Interior, patio o jardín donde vivirá el animal — hasta 4 fotos"
+            accept="image/*"
+            multiple
+            maxFiles={4}
+            required
+            files={docs.home_photos}
+            onChange={(f) => setDocs((d) => ({ ...d, home_photos: f }))}
+            error={docsErr.home_photos}
+          />
+
+          <div className="form-info-box">
+            🔒 Tus documentos son confidenciales y solo los revisa el equipo del refugio para validar tu solicitud.
+          </div>
+        </div>
+      )}
+
+      {/* ── Paso 4: Acta responsiva + firma ────────────────────────────────── */}
+      {step === 4 && (
+        <div className="form-grid">
+          <div className="acta-box">
+            <h3>Acta Responsiva de Adopción</h3>
+            <p className="acta-intro">
+              Yo, <strong>{account.full_name || 'el/la adoptante'}</strong>, me comprometo voluntariamente a:
+            </p>
+            <ol>
+              <li>Brindar al animal adoptado alimentación adecuada, atención veterinaria regular y cariño permanente.</li>
+              <li>No abandonar, maltratar ni transferir al animal sin informar y obtener aprobación previa del refugio.</li>
+              <li>Mantener al animal en condiciones óptimas de higiene, salud y bienestar.</li>
+              <li>No usar al animal para peleas, reproducción sin control ni actividad que atente contra su bienestar.</li>
+              <li>Permitir visitas de seguimiento del refugio durante los primeros 3 meses tras la adopción.</li>
+              <li>Si no puedo continuar con la tenencia, comunicarlo al refugio con al menos 15 días de anticipación.</li>
+              <li>Llevar al animal al veterinario al menos una vez al año y mantener su plan de vacunación vigente.</li>
+            </ol>
+            <p className="acta-note">
+              Esta acta tiene carácter de compromiso moral y ético con el bienestar animal.
+              El refugio se reserva el derecho de recuperar al animal ante incumplimiento comprobado.
+            </p>
+          </div>
+
+          <label className="form-checkbox">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+            />
+            <span>He leído y acepto el Acta Responsiva de Adopción</span>
+          </label>
+          {actaErr.agreed && (
+            <span className="field__msg field__msg--error" role="alert">{actaErr.agreed}</span>
+          )}
+
+          <div className="form-field-block">
+            <span className="field__label">
+              Firma digital <span className="field__required" aria-hidden="true">*</span>
+            </span>
+            <span className="field__msg" style={{ display: 'block', marginBottom: 6 }}>
+              Dibuja tu firma con el mouse o con el dedo en pantalla táctil
+            </span>
+            <SigPad
+              isSigned={!!signature}
+              onSign={setSignature}
+              onClear={() => setSignature(null)}
+              error={actaErr.signature}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Navegación ───────────────────────────────────────────────────────── */}
+      <div className="form-nav">
+        {step > 1 && (
+          <button
+            type="button"
+            className="btn-nav-back"
+            onClick={() => setStep((s) => (s - 1) as Step)}
+          >
+            ← Atrás
+          </button>
+        )}
+        <button
+          type="button"
+          className="btn btn--amber btn--lg"
+          style={{ marginLeft: step === 1 ? 'auto' : undefined }}
+          disabled={submitting}
+          onClick={step === 4 ? submit : next}
+        >
+          {step === 4
+            ? (submitting ? 'Creando cuenta…' : 'Crear cuenta y firmar 🐾')
+            : 'Continuar →'}
         </button>
       </div>
-    </form>
+    </div>
   );
 }

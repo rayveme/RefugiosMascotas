@@ -100,9 +100,21 @@ async def register_foundation(
     "/register/admin",
     response_model=TokenResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Registra una cuenta de administrador (sin restricciones — solo para uso local)",
+    summary="Registra una cuenta de administrador (requiere ADMIN_SECRET en producción)",
 )
 async def register_admin(payload: AdminRegister, session: SessionDep) -> TokenResponse:
+    if not settings.debug:
+        if not settings.admin_secret:
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN,
+                "El registro de administradores está deshabilitado en este entorno.",
+            )
+        if payload.secret_code != settings.admin_secret:
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN,
+                "Código de administrador incorrecto.",
+            )
+
     if await _email_exists(session, Admin, payload.email):
         raise HTTPException(status.HTTP_409_CONFLICT, "El email ya está registrado")
 

@@ -103,6 +103,21 @@ export function mapAdoptionRequest(r: AdoptionRequestApi): AdoptionRequest {
       phone: r.adopter.phone,
       city: r.adopter.city,
       avatarUrl: r.adopter.avatar_url,
+      // Perfil del hogar
+      housingType: r.adopter.housing_type ?? null,
+      hasGarden: r.adopter.has_garden ?? null,
+      hasChildren: r.adopter.has_children ?? null,
+      hasOtherPets: r.adopter.has_other_pets ?? null,
+      otherPetsDesc: r.adopter.other_pets_desc ?? null,
+      adoptionReason: r.adopter.adoption_reason ?? null,
+      // Documentos
+      idFrontUrl: r.adopter.id_front_url ?? null,
+      idBackUrl: r.adopter.id_back_url ?? null,
+      proofAddressUrl: r.adopter.proof_address_url ?? null,
+      homePhotoUrls: r.adopter.home_photo_urls
+        ? r.adopter.home_photo_urls.split('|').filter(Boolean)
+        : [],
+      signatureUrl: r.adopter.signature_url ?? null,
     },
   };
 }

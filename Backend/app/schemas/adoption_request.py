@@ -29,6 +29,19 @@ class _AdopterSummary(BaseModel):
     phone: str | None
     city: str | None
     avatar_url: str | None
+    # Perfil del hogar
+    housing_type: str | None = None
+    has_garden: bool | None = None
+    has_children: bool | None = None
+    has_other_pets: bool | None = None
+    other_pets_desc: str | None = None
+    adoption_reason: str | None = None
+    # Documentos
+    id_front_url: str | None = None
+    id_back_url: str | None = None
+    proof_address_url: str | None = None
+    home_photo_urls: str | None = None
+    signature_url: str | None = None
 
 
 class AdoptionRequestRead(BaseModel):

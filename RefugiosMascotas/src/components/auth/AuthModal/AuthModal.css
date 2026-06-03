@@ -187,3 +187,409 @@
 @media (max-width: 540px) {
   .auth-google__buttons { grid-template-columns: 1fr; }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   FORMULARIOS MULTI-PASO
+══════════════════════════════════════════════════════════════ */
+
+/* ── Barra de pasos ────────────────────────────────────────── */
+.form-multistep { display: flex; flex-direction: column; }
+
+.form-steps {
+  display: flex;
+  border-bottom: 2px solid var(--cream-dark);
+  margin-bottom: 24px;
+}
+
+.form-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 0 6px 14px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  background: none;
+  font-family: inherit;
+  cursor: default;
+  transition: border-color 0.2s ease;
+}
+
+.form-step--done   { cursor: pointer; }
+.form-step--future { opacity: 0.38; }
+.form-step--active { border-bottom-color: var(--amber); }
+.form-step--done   { border-bottom-color: var(--forest); }
+
+.form-step__number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--cream-dark);
+  color: var(--text-mid);
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.form-step--active .form-step__number { background: var(--amber); color: #fff; }
+.form-step--done   .form-step__number { background: var(--forest); color: #fff; }
+
+.form-step__label {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.form-step--active .form-step__label { color: var(--amber); }
+.form-step--done   .form-step__label { color: var(--forest); }
+
+/* ── Navegación inferior ───────────────────────────────────── */
+.form-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--cream-dark);
+  gap: 12px;
+}
+
+.btn-nav-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: none;
+  border: 1.5px solid var(--cream-dark);
+  border-radius: var(--radius-full);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.btn-nav-back:hover { border-color: var(--forest); color: var(--forest-deep); }
+
+/* ── Separador de sección ──────────────────────────────────── */
+.form-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--cream-dark);
+}
+
+/* ── Bloque genérico (label + contenido sin FormField) ────── */
+.form-field-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Caja info ─────────────────────────────────────────────── */
+.form-info-box {
+  background: rgba(45, 61, 10, 0.06);
+  border: 1px solid rgba(45, 61, 10, 0.15);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 0.82rem;
+  color: var(--forest);
+  line-height: 1.5;
+}
+
+/* ── Toggle Sí / No ────────────────────────────────────────── */
+.form-yn-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.form-yn-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.yn-toggle { display: flex; gap: 8px; }
+
+.yn-btn {
+  flex: 1;
+  padding: 10px 8px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--cream-dark);
+  background: #fff;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.yn-btn--yes.yn-btn--active {
+  border-color: var(--forest);
+  background: rgba(45, 61, 10, 0.07);
+  color: var(--forest-deep);
+}
+
+.yn-btn--no.yn-btn--active {
+  border-color: #b83333;
+  background: rgba(184, 51, 51, 0.06);
+  color: #912828;
+}
+
+/* ── Zona de subida de archivos ────────────────────────────── */
+.file-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.file-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 20px 16px;
+  border: 2px dashed var(--cream-dark);
+  border-radius: var(--radius-md);
+  background: #fff;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.file-zone:hover,
+.file-zone--drag  {
+  border-color: var(--amber);
+  background: rgba(171, 195, 57, 0.05);
+}
+
+.file-zone__icon { font-size: 1.6rem; }
+
+.file-zone__text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--forest-deep);
+}
+
+.file-zone__sub {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.file-previews {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+}
+
+.file-preview {
+  position: relative;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  aspect-ratio: 1;
+  background: var(--cream-dark);
+}
+
+.file-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.file-preview__doc {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+}
+
+.file-preview__name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 0.58rem;
+  padding: 3px 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-preview__remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* ── Acta responsiva ───────────────────────────────────────── */
+.acta-box {
+  background: #f8f6f0;
+  border: 1px solid var(--cream-dark);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  max-height: 210px;
+  overflow-y: auto;
+}
+
+.acta-box h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-align: center;
+  color: var(--forest-deep);
+  margin-bottom: 10px;
+}
+
+.acta-intro {
+  font-size: 0.82rem;
+  color: var(--text-mid);
+  margin-bottom: 8px;
+}
+
+.acta-box ol {
+  padding-left: 16px;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-mid);
+  line-height: 1.65;
+}
+
+.acta-box ol li { margin-bottom: 4px; }
+
+.acta-note {
+  margin-top: 10px;
+  font-size: 0.75rem;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+/* ── Checkbox de acta ──────────────────────────────────────── */
+.form-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--forest-deep);
+  line-height: 1.45;
+}
+
+.form-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  margin-top: 1px;
+  accent-color: var(--forest);
+  cursor: pointer;
+}
+
+/* ── Pad de firma ──────────────────────────────────────────── */
+.sig-wrap { display: flex; flex-direction: column; gap: 6px; }
+
+.sig-pad {
+  display: block;
+  width: 100%;
+  height: 140px;
+  background: #fff;
+  border: 1.5px solid var(--cream-dark);
+  border-radius: var(--radius-md);
+  cursor: crosshair;
+  touch-action: none;
+  transition: border-color 0.18s ease;
+}
+
+.sig-pad--signed { border-color: var(--forest); }
+
+.sig-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sig-status {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.sig-status--ok {
+  color: var(--forest);
+  font-weight: 600;
+}
+
+.sig-clear {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  transition: background 0.14s ease;
+}
+.sig-clear:hover { background: var(--cream-dark); color: var(--forest-deep); }
+
+/* ── Pills de servicios (refugio) ──────────────────────────── */
+.service-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.service-pill {
+  padding: 7px 14px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--cream-dark);
+  background: #fff;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.service-pill--on {
+  border-color: var(--forest);
+  background: rgba(45, 61, 10, 0.08);
+  color: var(--forest-deep);
+  font-weight: 600;
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 580px) {
+  .form-yn-grid   { grid-template-columns: 1fr; }
+  .form-steps     { gap: 0; }
+  .form-step__label { display: none; }
+}

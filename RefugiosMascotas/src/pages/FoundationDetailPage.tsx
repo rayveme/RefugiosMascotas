@@ -174,7 +174,7 @@ export default function FoundationDetailPage() {
           <div className="foundation-detail__avatar" aria-hidden="true">{refugio.initial}</div>
           <div className="foundation-detail__hero-text">
             <h1 className="foundation-detail__name">{refugio.name}</h1>
-            <p className="foundation-detail__city">{refugio.city}, Colombia</p>
+            <p className="foundation-detail__city">{refugio.city}</p>
             <ul className="foundation-detail__stats">
               <li><strong>{refugio.animals}</strong><span>Mascotas</span></li>
               <li><strong>{refugio.adoptions}</strong><span>Adopciones</span></li>

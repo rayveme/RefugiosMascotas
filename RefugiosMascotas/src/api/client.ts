@@ -1,5 +1,5 @@
 import axios, { AxiosError, type AxiosInstance } from 'axios';
-import { authStorage } from '../services/auth.service';
+import { authCallbacks, authStorage } from '../services/auth.service';
 
 const baseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
 
@@ -24,6 +24,7 @@ apiClient.interceptors.response.use(
   (error: AxiosError<{ detail?: string }>) => {
     if (error.response?.status === 401) {
       authStorage.clear();
+      authCallbacks.triggerUnauthorized();
     }
     return Promise.reject(error);
   },

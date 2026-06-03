@@ -1,0 +1,25 @@
+# ============================================================
+# Caddyfile — reverse proxy del backend + HTTPS automático
+#
+# Reemplaza "api.tudominio.com" con tu dominio real ANTES de
+# desplegar. Caddy obtiene el certificado de Let's Encrypt solo.
+# ============================================================
+
+api.tudominio.com {
+    # Redirige todo el tráfico al backend FastAPI
+    reverse_proxy backend:8000
+
+    # Cabeceras de seguridad básicas
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options    "nosniff"
+        X-Frame-Options           "SAMEORIGIN"
+        -Server
+    }
+
+    # Logs en formato JSON para facilitar monitoreo
+    log {
+        output stdout
+        format json
+    }
+}

@@ -5,6 +5,7 @@ import { extractApiError } from '../api/client';
 import { useAuth } from '../hooks/useAuth';
 import type { AdoptionRequest, AdoptionStatus } from '../types';
 import type { ShellContext } from '../types/shell';
+import ApplicantDrawer from './ApplicantDrawer';
 import './RequestsPage.css';
 
 const STATUS_LABEL: Record<AdoptionStatus, string> = {
@@ -21,6 +22,7 @@ export default function RequestsPage() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<AdoptionStatus | 'all'>('all');
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [drawerRequest, setDrawerRequest] = useState<AdoptionRequest | null>(null);
 
   const role = user?.role;
 
@@ -77,6 +79,7 @@ export default function RequestsPage() {
       ctx.showToast(`${req.pet.name} fue asignada a ${req.adopter.fullName}`, 'success');
       ctx.bumpPets();
       ctx.bumpFoundations();
+      setDrawerRequest(null);
       await load();
     } catch (err) {
       ctx.showToast(extractApiError(err, 'No pudimos aprobar la solicitud.'), 'error');
@@ -102,6 +105,7 @@ export default function RequestsPage() {
     try {
       await adoptionsApi.reject(req.id);
       ctx.showToast(`Solicitud de ${req.adopter.fullName} rechazada`, 'info');
+      setDrawerRequest(null);
       await load();
     } catch (err) {
       ctx.showToast(extractApiError(err, 'No pudimos rechazar la solicitud.'), 'error');
@@ -133,6 +137,14 @@ export default function RequestsPage() {
   const isFoundation = role === 'foundation';
 
   return (
+    <>
+    <ApplicantDrawer
+      request={drawerRequest}
+      busyId={busyId}
+      onClose={() => setDrawerRequest(null)}
+      onApprove={onApprove}
+      onReject={onReject}
+    />
     <section className="requests-page">
       <div className="container">
         <header className="requests-header">
@@ -240,22 +252,37 @@ export default function RequestsPage() {
                     {STATUS_LABEL[req.status]}
                   </span>
 
-                  {isFoundation && req.status === 'pending' && (
+                  {isFoundation && (
                     <div className="request-card__buttons">
                       <button
-                        className="btn-ghost-danger"
-                        disabled={busyId === req.id}
-                        onClick={() => onReject(req)}
+                        className="btn-view-profile"
+                        onClick={() => setDrawerRequest(req)}
+                        title="Ver perfil completo del solicitante"
                       >
-                        Rechazar
+                        Ver perfil
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                          <path d="M9 18l6-6-6-6" />
+                        </svg>
                       </button>
-                      <button
-                        className="btn-solid-success"
-                        disabled={busyId === req.id}
-                        onClick={() => onApprove(req)}
-                      >
-                        {busyId === req.id ? 'Procesando…' : 'Aprobar'}
-                      </button>
+                      {req.status === 'pending' && (
+                        <>
+                          <button
+                            className="btn-ghost-danger"
+                            disabled={busyId === req.id}
+                            onClick={() => onReject(req)}
+                          >
+                            Rechazar
+                          </button>
+                          <button
+                            className="btn-solid-success"
+                            disabled={busyId === req.id}
+                            onClick={() => onApprove(req)}
+                          >
+                            {busyId === req.id ? 'Procesando…' : 'Aprobar'}
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -265,5 +292,6 @@ export default function RequestsPage() {
         )}
       </div>
     </section>
+    </>
   );
 }

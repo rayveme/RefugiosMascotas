@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
+import { notify } from '../../services/notify.service';
+import type { ShellContext } from '../../types/shell';
 import './Registrorefugio.css';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -91,6 +93,7 @@ function CheckPill({
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function RegistroRefugio() {
   const navigate = useNavigate();
+  const ctx = useOutletContext<ShellContext>();
   const [step, setStep]           = useState<Step>(1);
   const [form, setForm]           = useState<FormState>(INITIAL_FORM);
   const [errors, setErrors]       = useState<Partial<Record<keyof FormState, string>>>({});
@@ -405,9 +408,21 @@ const submit = () => {
                 <input type="checkbox" />
                 <span>
                   Acepto los{' '}
-                  <a href="/terminos" className="rr-link">Términos de Servicio</a>
+                  <button
+                    type="button"
+                    className="rr-link"
+                    onClick={(e) => { e.preventDefault(); notify.info('Términos de Servicio disponibles próximamente.'); }}
+                  >
+                    Términos de Servicio
+                  </button>
                   {' '}y la{' '}
-                  <a href="/privacidad" className="rr-link">Política de Privacidad</a>
+                  <button
+                    type="button"
+                    className="rr-link"
+                    onClick={(e) => { e.preventDefault(); notify.info('Política de Privacidad disponible próximamente.'); }}
+                  >
+                    Política de Privacidad
+                  </button>
                   {' '}de AdoptaMe
                 </span>
               </label>
@@ -440,7 +455,13 @@ const submit = () => {
 
         <p className="rr-login-hint">
           ¿Ya tienes cuenta?{' '}
-          <a href="/login" className="rr-link">Inicia sesión</a>
+          <button
+            type="button"
+            className="rr-link"
+            onClick={() => { navigate('/'); ctx.openLogin(); }}
+          >
+            Inicia sesión
+          </button>
         </p>
       </div>
     </div>

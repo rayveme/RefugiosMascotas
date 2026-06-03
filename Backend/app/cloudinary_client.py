@@ -29,13 +29,39 @@ cloudinary.config(
 
 
 async def upload_pet_image(content: bytes, filename: str | None = None) -> dict[str, Any]:
-    """Sube `content` a Cloudinary en la carpeta configurada y devuelve el resultado."""
+    """Sube `content` a Cloudinary en la carpeta de mascotas y devuelve el resultado."""
 
     def _do_upload() -> dict[str, Any]:
         return cloudinary.uploader.upload(
             content,
             folder=_settings.cloudinary_folder,
             resource_type="image",
+            use_filename=bool(filename),
+            unique_filename=True,
+            overwrite=False,
+            filename_override=filename,
+        )
+
+    return await asyncio.to_thread(_do_upload)
+
+
+async def upload_document(
+    content: bytes,
+    folder: str,
+    filename: str | None = None,
+    resource_type: str = "auto",
+) -> dict[str, Any]:
+    """Sube un documento (imagen o PDF) a Cloudinary en la carpeta indicada.
+
+    Usa `resource_type="auto"` para que Cloudinary detecte si es imagen o PDF.
+    Devuelve el dict completo del resultado (incluye `secure_url` y `public_id`).
+    """
+
+    def _do_upload() -> dict[str, Any]:
+        return cloudinary.uploader.upload(
+            content,
+            folder=folder,
+            resource_type=resource_type,
             use_filename=bool(filename),
             unique_filename=True,
             overwrite=False,

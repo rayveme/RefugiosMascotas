@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     google_client_secret: str = ""
     google_redirect_uri: str = "http://localhost:8000/auth/google/callback"
 
+    # --- Admin bootstrap ---
+    # En producción define ADMIN_SECRET con un valor largo y aleatorio.
+    # El endpoint POST /auth/register/admin lo exigirá cuando DEBUG=false.
+    # Con DEBUG=true se omite la comprobación (uso local).
+    admin_secret: str = ""
+
     # --- Cloudinary (opcional) ---
     cloudinary_cloud_name: str = ""
     cloudinary_api_key: str = ""
@@ -80,8 +86,13 @@ class Settings(BaseSettings):
             self.frontend_url,
             "http://localhost:5173",
             "http://127.0.0.1:5173",
+            "http://localhost:5174",
+            "http://127.0.0.1:5174",
             "http://localhost:4173",
             "http://127.0.0.1:4173",
+            # Cuando Vite se expone en red (o en Docker), el origin puede verse como IP local.
+            # Permitimos el origin actual observado en consola.
+            "http://172.20.10.2:5174",
         ]
 
 

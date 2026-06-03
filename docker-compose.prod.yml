@@ -1,0 +1,61 @@
+# ============================================================
+# Overlay de PRODUCCIÓN — usar junto al docker-compose.yml base:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# El frontend va a Vercel; aquí solo corren db + backend + caddy.
+# ============================================================
+
+services:
+  # ── Base de datos ──────────────────────────────────────────
+  db:
+    restart: always
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Variable POSTGRES_PASSWORD requerida}
+      POSTGRES_DB:       ${POSTGRES_DB:-refugios}
+    # En producción NO exponemos la DB al host; solo la red interna de compose.
+    ports: !reset []
+
+  # ── Backend FastAPI ────────────────────────────────────────
+  backend:
+    restart: always
+    # Sin --reload, sin volúmenes de código fuente.
+    volumes: !reset []
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8000"
+      - --workers
+      - "2"
+    # En prod Caddy hace de proxy; no exponemos el puerto directamente.
+    ports: !reset []
+
+  # ── Reverse proxy con HTTPS automático (Let's Encrypt) ────
+  caddy:
+    image: caddy:2-alpine
+    container_name: refugios-caddy
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  # El servicio frontend definido en compose.yml no se usa en prod.
+  frontend:
+    profiles:
+      - dev-only   # perfil inexistente → el servicio no arranca
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

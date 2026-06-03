@@ -3,6 +3,18 @@ import type { Role } from '../types/api';
 const TOKEN_KEY = 'huella.token';
 const ROLE_KEY = 'huella.role';
 
+type VoidCallback = () => void;
+let _onUnauthorized: VoidCallback | null = null;
+
+export const authCallbacks = {
+  setOnUnauthorized(cb: VoidCallback | null) {
+    _onUnauthorized = cb;
+  },
+  triggerUnauthorized() {
+    _onUnauthorized?.();
+  },
+};
+
 export interface OAuthHashResult {
   token?: string;
   role?: Role;

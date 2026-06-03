@@ -5,6 +5,8 @@ import { extractApiError } from '../api/client';
 import { useAuth } from '../hooks/useAuth';
 import type { AuthAdopter, AuthFoundation, FoundationStatus, Pet } from '../types';
 import type { ShellContext } from '../types/shell';
+import EditFoundationModal from '../components/admin/EditFoundationModal';
+import EditAdopterModal from '../components/admin/EditAdopterModal';
 import './AdminPage.css';
 
 type Tab = 'pending' | 'foundations' | 'adopters' | 'pets';
@@ -33,6 +35,10 @@ export default function AdminPage() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  // ── Modales de edición ──
+  const [editingFoundation, setEditingFoundation] = useState<AuthFoundation | null>(null);
+  const [editingAdopter, setEditingAdopter] = useState<AuthAdopter | null>(null);
 
   const isAdmin = user?.role === 'admin';
 
@@ -150,6 +156,18 @@ export default function AdminPage() {
     }
   };
 
+  const onFoundationSaved = (updated: AuthFoundation) => {
+    setFoundations((prev) => prev.map((f) => f.id === updated.id ? updated : f));
+    setPendingFoundations((prev) => prev.map((f) => f.id === updated.id ? updated : f));
+    ctx.showToast(`${updated.name} actualizada`, 'success');
+    ctx.bumpFoundations();
+  };
+
+  const onAdopterSaved = (updated: AuthAdopter) => {
+    setAdopters((prev) => prev.map((a) => a.id === updated.id ? updated : a));
+    ctx.showToast(`${updated.fullName} actualizado`, 'success');
+  };
+
   const onDeletePet = async (pet: Pet) => {
     const ok = await ctx.confirm({
       title: 'Eliminar mascota',
@@ -197,6 +215,18 @@ export default function AdminPage() {
 
   return (
     <section className="admin-page">
+      {/* ── Modales de edición ── */}
+      <EditFoundationModal
+        foundation={editingFoundation}
+        onClose={() => setEditingFoundation(null)}
+        onSaved={onFoundationSaved}
+      />
+      <EditAdopterModal
+        adopter={editingAdopter}
+        onClose={() => setEditingAdopter(null)}
+        onSaved={onAdopterSaved}
+      />
+
       <div className="container">
         <header className="admin-header">
           <div className="eyebrow">
@@ -289,6 +319,13 @@ export default function AdminPage() {
                   </div>
                   <div className="admin-row__actions">
                     <button
+                      className="btn-admin-edit"
+                      disabled={busyId === `f-${f.id}`}
+                      onClick={() => setEditingFoundation(f)}
+                    >
+                      Editar
+                    </button>
+                    <button
                       className="btn-ghost-danger"
                       disabled={busyId === `f-${f.id}`}
                       onClick={() => onDeleteFoundation(f)}
@@ -321,6 +358,13 @@ export default function AdminPage() {
                     {a.phone && <span className="admin-row__meta">📞 {a.phone}</span>}
                   </div>
                   <div className="admin-row__actions">
+                    <button
+                      className="btn-admin-edit"
+                      disabled={busyId === `a-${a.id}`}
+                      onClick={() => setEditingAdopter(a)}
+                    >
+                      Editar
+                    </button>
                     <button
                       className="btn-ghost-danger"
                       disabled={busyId === `a-${a.id}`}

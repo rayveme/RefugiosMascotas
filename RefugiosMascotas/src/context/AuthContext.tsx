@@ -10,7 +10,7 @@ import { adminApi } from '../api/admin';
 import { adoptersApi } from '../api/adopters';
 import { authApi } from '../api/auth';
 import { foundationsApi } from '../api/foundations';
-import { authStorage } from '../services/auth.service';
+import { authCallbacks, authStorage } from '../services/auth.service';
 import type {
   AdminRegisterPayload,
   AdopterRegisterPayload,
@@ -127,6 +127,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     authStorage.clear();
     setUser(null);
   }, []);
+
+  useEffect(() => {
+    authCallbacks.setOnUnauthorized(logout);
+    return () => authCallbacks.setOnUnauthorized(null);
+  }, [logout]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

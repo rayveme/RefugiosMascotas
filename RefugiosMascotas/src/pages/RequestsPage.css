@@ -261,6 +261,28 @@
   gap: 8px;
 }
 
+.btn-view-profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--forest);
+  border: 1.5px solid var(--forest);
+  border-radius: var(--radius-full);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.btn-view-profile:hover {
+  background: var(--forest);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
 .btn-ghost-danger {
   padding: 8px 16px;
   background: #fff;

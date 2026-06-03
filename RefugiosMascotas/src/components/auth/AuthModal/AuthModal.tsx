@@ -17,6 +17,8 @@ interface Props {
 }
 
 const apiBase = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
+const enableAdminRegister =
+  import.meta.env.VITE_ENABLE_ADMIN_REGISTER === 'true' || import.meta.env.DEV;
 
 export default function AuthModal({ open, initialMode = 'login', onClose }: Props) {
   const [mode, setMode] = useState<Mode>(initialMode);
@@ -58,13 +60,16 @@ export default function AuthModal({ open, initialMode = 'login', onClose }: Prop
         ? { title: 'Crear cuenta de administrador', subtitle: 'Acceso al panel de gestión de la plataforma.' }
         : titles[mode];
 
+  // Formularios de adoptante y refugio tienen múltiples pasos y necesitan más espacio
+  const modalWidth = registerRole === 'adopter' || registerRole === 'foundation' ? 'lg' : 'md';
+
   return (
     <Modal
       open={open}
       onClose={handleClose}
       title={titleNode.title}
       subtitle={titleNode.subtitle}
-      width="md"
+      width={modalWidth}
     >
       <div className="auth-tabs" role="tablist">
         <button
@@ -121,20 +126,22 @@ export default function AuthModal({ open, initialMode = 'login', onClose }: Prop
             <span className="role-card__desc">Publica mascotas en adopción. Tu cuenta debe ser aprobada por un admin.</span>
           </button>
 
-          <button
-            type="button"
-            className="role-card role-card--admin"
-            onClick={() => setRegisterRole('admin')}
-          >
-            <span className="role-card__icon" aria-hidden="true">
-              <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#2D5A3D" strokeWidth="1.6">
-                <path d="M12 2L4 6v6c0 5 3.5 9.5 8 10 4.5-.5 8-5 8-10V6l-8-4z" />
-                <path d="M9 12l2 2 4-4" />
-              </svg>
-            </span>
-            <span className="role-card__title">Soy admin</span>
-            <span className="role-card__desc">Acceso al panel de control de la plataforma (solo local).</span>
-          </button>
+          {enableAdminRegister && (
+            <button
+              type="button"
+              className="role-card role-card--admin"
+              onClick={() => setRegisterRole('admin')}
+            >
+              <span className="role-card__icon" aria-hidden="true">
+                <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#2D5A3D" strokeWidth="1.6">
+                  <path d="M12 2L4 6v6c0 5 3.5 9.5 8 10 4.5-.5 8-5 8-10V6l-8-4z" />
+                  <path d="M9 12l2 2 4-4" />
+                </svg>
+              </span>
+              <span className="role-card__title">Soy admin</span>
+              <span className="role-card__desc">Acceso al panel de control de la plataforma.</span>
+            </button>
+          )}
         </div>
       )}
 

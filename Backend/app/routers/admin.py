@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query, status
+from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import func, select
 
 from app.cloudinary_client import build_image_url, delete_image
@@ -7,6 +8,26 @@ from app.models import Adopter, Foundation, FoundationStatus, Pet
 from app.schemas.adopter import AdopterRead
 from app.schemas.foundation import FoundationRead
 from app.schemas.pet import PetRead
+
+# ── Schemas exclusivos del admin ──────────────────────────────────────────────
+
+class AdminFoundationPatch(BaseModel):
+    """Campos que el admin puede modificar en una fundación."""
+    name:        str | None = Field(None, min_length=2, max_length=120)
+    city:        str | None = Field(None, min_length=2, max_length=80)
+    description: str | None = Field(None, max_length=1000)
+    phone:       str | None = Field(None, max_length=30)
+    years:       int | None = Field(None, ge=0, le=200)
+    email:       EmailStr | None = None
+    status:      FoundationStatus | None = None
+
+
+class AdminAdopterPatch(BaseModel):
+    """Campos que el admin puede modificar en un adoptante."""
+    full_name: str | None = Field(None, min_length=2, max_length=120)
+    city:      str | None = Field(None, max_length=80)
+    phone:     str | None = Field(None, max_length=30)
+    email:     EmailStr | None = None
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -112,6 +133,30 @@ async def reject_foundation(
     return _foundation_to_read(foundation, animals or 0)
 
 
+@router.patch(
+    "/foundations/{foundation_id}",
+    response_model=FoundationRead,
+    summary="Actualiza campos de una fundación (admin override)",
+)
+async def update_foundation(
+    foundation_id: int,
+    body: AdminFoundationPatch,
+    _: CurrentAdmin,
+    session: SessionDep,
+) -> FoundationRead:
+    foundation = await session.get(Foundation, foundation_id)
+    if foundation is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Fundación no encontrada")
+    for field, value in body.model_dump(exclude_unset=True).items():
+        setattr(foundation, field, value)
+    await session.commit()
+    await session.refresh(foundation)
+    animals = await session.scalar(
+        select(func.count(Pet.id)).where(Pet.foundation_id == foundation.id)
+    )
+    return _foundation_to_read(foundation, animals or 0)
+
+
 @router.delete(
     "/foundations/{foundation_id}",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -157,6 +202,27 @@ async def list_adopters(
     stmt = select(Adopter).order_by(Adopter.created_at.desc())
     adopters = (await session.scalars(stmt)).all()
     return [AdopterRead.model_validate(a) for a in adopters]
+
+
+@router.patch(
+    "/adopters/{adopter_id}",
+    response_model=AdopterRead,
+    summary="Actualiza campos de un adoptante (admin override)",
+)
+async def update_adopter(
+    adopter_id: int,
+    body: AdminAdopterPatch,
+    _: CurrentAdmin,
+    session: SessionDep,
+) -> AdopterRead:
+    adopter = await session.get(Adopter, adopter_id)
+    if adopter is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Adoptante no encontrado")
+    for field, value in body.model_dump(exclude_unset=True).items():
+        setattr(adopter, field, value)
+    await session.commit()
+    await session.refresh(adopter)
+    return AdopterRead.model_validate(adopter)
 
 
 @router.delete(

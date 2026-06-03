@@ -51,6 +51,7 @@ export interface AdminRegisterPayload {
   email: string;
   password: string;
   full_name: string;
+  secret_code?: string;
 }
 
 export type PetTypeApi = 'Perro' | 'Gato';
@@ -134,6 +135,19 @@ export interface AdoptionRequestAdopterSummaryApi {
   phone: string | null;
   city: string | null;
   avatar_url: string | null;
+  // Perfil del hogar
+  housing_type: string | null;
+  has_garden: boolean | null;
+  has_children: boolean | null;
+  has_other_pets: boolean | null;
+  other_pets_desc: string | null;
+  adoption_reason: string | null;
+  // Documentos (URLs Cloudinary)
+  id_front_url: string | null;
+  id_back_url: string | null;
+  proof_address_url: string | null;
+  home_photo_urls: string | null;   // separadas por "|"
+  signature_url: string | null;
 }
 
 export interface AdoptionRequestApi {
@@ -151,4 +165,23 @@ export interface AdoptionRequestApi {
 
 export interface AdoptionRequestCreatePayload {
   message?: string;
+}
+
+// ── Admin PATCH payloads ──────────────────────────────────────────────────────
+
+export interface AdminFoundationPatchPayload {
+  name?:        string;
+  city?:        string;
+  description?: string | null;
+  phone?:       string | null;
+  years?:       number;
+  email?:       string;
+  status?:      FoundationStatusApi;
+}
+
+export interface AdminAdopterPatchPayload {
+  full_name?: string;
+  city?:      string | null;
+  phone?:     string | null;
+  email?:     string;
 }
