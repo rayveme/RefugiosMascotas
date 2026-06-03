@@ -38,6 +38,14 @@ export interface FoundationApi {
   profile_complete: boolean;
   status: FoundationStatusApi;
   created_at: string;
+  // Ubicación adicional
+  address: string | null;
+  state: string | null;
+  postal_code: string | null;
+  // Contacto adicional
+  whatsapp: string | null;
+  website: string | null;
+  responsible: string | null;
 }
 
 export interface AdminApi {
@@ -186,6 +194,14 @@ export interface AdminFoundationPatchPayload {
   years?:       number;
   email?:       string;
   status?:      FoundationStatusApi;
+  // Ubicación adicional
+  address?:     string | null;
+  state?:       string | null;
+  postal_code?: string | null;
+  // Contacto adicional
+  whatsapp?:    string | null;
+  website?:     string | null;
+  responsible?: string | null;
 }
 
 export interface AdminAdopterPatchPayload {

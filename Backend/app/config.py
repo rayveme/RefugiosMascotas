@@ -92,20 +92,22 @@ class Settings(BaseSettings):
         """Lista final de orígenes permitidos.
 
         Si `cors_origins` está definida, se respeta tal cual.
-        Si no, se construye una lista local-friendly a partir de `frontend_url`.
+        Si no, se incluye el dominio de producción en Vercel + hosts locales de Vite.
         """
         if self.cors_origins.strip():
             return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
         return [
+            # Producción (Vercel)
+            "https://refugios-mascotas-rrao.vercel.app",
+            # Frontend URL configurable (útil si cambia el dominio de Vercel)
             self.frontend_url,
+            # Desarrollo local (Vite)
             "http://localhost:5173",
             "http://127.0.0.1:5173",
             "http://localhost:5174",
             "http://127.0.0.1:5174",
             "http://localhost:4173",
             "http://127.0.0.1:4173",
-            # Cuando Vite se expone en red (o en Docker), el origin puede verse como IP local.
-            # Permitimos el origin actual observado en consola.
             "http://172.20.10.2:5174",
         ]
 

@@ -32,6 +32,14 @@ export function mapFoundation(f: FoundationApi): AuthFoundation {
     gradientTo: f.gradient_to,
     profileComplete: f.profile_complete,
     status: f.status,
+    // Ubicación adicional
+    address:    f.address    ?? null,
+    state:      f.state      ?? null,
+    postalCode: f.postal_code ?? null,
+    // Contacto adicional
+    whatsapp:    f.whatsapp    ?? null,
+    website:     f.website     ?? null,
+    responsible: f.responsible ?? null,
   };
 }
 

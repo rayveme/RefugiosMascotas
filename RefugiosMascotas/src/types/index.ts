@@ -73,6 +73,14 @@ export interface AuthFoundation {
   gradientTo: string;
   profileComplete: boolean;
   status: FoundationStatus;
+  // Ubicación adicional
+  address: string | null;
+  state: string | null;
+  postalCode: string | null;
+  // Contacto adicional
+  whatsapp: string | null;
+  website: string | null;
+  responsible: string | null;
 }
 
 export interface AuthAdmin {
