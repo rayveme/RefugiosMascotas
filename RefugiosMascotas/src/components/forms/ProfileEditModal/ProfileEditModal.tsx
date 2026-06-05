@@ -9,17 +9,15 @@ import { useAuth } from '../../../hooks/useAuth';
 interface Props {
   open: boolean;
   onClose: () => void;
-  /** Cuando `true` muestra el modal en modo "completa tu perfil" (post-registro Google). */
-  isOnboarding?: boolean;
 }
 
-export default function ProfileEditModal({ open, onClose, isOnboarding }: Props) {
+export default function ProfileEditModal({ open, onClose }: Props) {
   const { user, refresh } = useAuth();
 
   if (!user) return null;
 
   return user.role === 'adopter' ? (
-    <AdopterEditForm open={open} onClose={onClose} refresh={refresh} isOnboarding={isOnboarding} />
+    <AdopterEditForm open={open} onClose={onClose} refresh={refresh} />
   ) : (
     <FoundationEditForm open={open} onClose={onClose} refresh={refresh} />
   );
@@ -29,10 +27,9 @@ interface FormProps {
   open: boolean;
   onClose: () => void;
   refresh: () => Promise<void>;
-  isOnboarding?: boolean;
 }
 
-function AdopterEditForm({ open, onClose, refresh, isOnboarding }: FormProps) {
+function AdopterEditForm({ open, onClose, refresh }: FormProps) {
   const { user } = useAuth();
   const profile = user?.role === 'adopter' ? user.profile : null;
 
@@ -79,32 +76,19 @@ function AdopterEditForm({ open, onClose, refresh, isOnboarding }: FormProps) {
     }
   };
 
-  const onboardingTitle    = '¡Casi listo! Completa tu perfil';
-  const onboardingSubtitle = 'Para agendar visitas o enviar solicitudes de adopción necesitamos tu ciudad y teléfono. Solo toma un momento.';
-
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title={isOnboarding ? onboardingTitle : 'Mi perfil'}
-      subtitle={
-        isOnboarding
-          ? onboardingSubtitle
-          : profile.profileComplete
-          ? 'Actualiza tus datos cuando lo necesites.'
-          : 'Completa ciudad y teléfono — los necesitamos cuando vayas a adoptar.'
-      }
+      title="Mi perfil"
+      subtitle={profile.profileComplete
+        ? 'Actualiza tus datos cuando lo necesites.'
+        : 'Completa ciudad y teléfono — los necesitamos cuando vayas a adoptar.'}
       width="md"
     >
-      {isOnboarding && (
-        <div className="profile-onboarding-banner">
-          <span>🐾</span>
-          <span>Registrado con Google. Agrega estos datos para poder adoptar y agendar visitas.</span>
-        </div>
-      )}
       <form onSubmit={onSubmit} className="form-grid" noValidate>
         {error && <div className="form-error-banner">{error}</div>}
-        {ok && <div className="form-success-banner">¡Perfil completado! Ya puedes adoptar y agendar visitas.</div>}
+        {ok && <div className="form-success-banner">¡Perfil actualizado!</div>}
 
         <FormField
           label="Nombre completo"

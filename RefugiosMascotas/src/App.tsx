@@ -12,6 +12,7 @@ import Footer from "./components/Footer/Footer";
 import AuthModal from "./components/auth/AuthModal/AuthModal";
 import PetForm from "./components/forms/PetForm/PetForm";
 import ProfileEditModal from "./components/forms/ProfileEditModal/ProfileEditModal";
+import CompleteAdopterProfileModal from "./components/forms/CompleteAdopterProfileModal/CompleteAdopterProfileModal";
 import RegistroRefugio from "./components/Registrorefugio/Registrorefugio";
 import DashboardRefugio from "./components/DashboardRefugio/Dashboardrefugio";
 import CitaFormModal from "./components/CitaCTA/CitaFormModal";
@@ -37,11 +38,10 @@ function AppShell() {
   const [authMode, setAuthMode] = useState<"login" | "register" | null>(null);
   const [petFormOpen, setPetFormOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [completeProfileOpen, setCompleteProfileOpen] = useState(false);
   const [citaOpen, setCitaOpen] = useState(false);
 
-  // ── Auto-apertura del perfil tras login con Google ──────────────────────────
-  // Detectamos cuando el usuario pasa de "sin sesión" → "adoptante con perfil
-  // incompleto" y abrimos el modal una sola vez por sesión.
+  // ── Auto-apertura post-login cuando el perfil del adoptante está incompleto ──
   const prevUserIdRef = useRef<number | null>(null);
   useEffect(() => {
     const currentId = user?.role === 'adopter' ? user.profile.id : null;
@@ -54,11 +54,10 @@ function AppShell() {
       user?.role === 'adopter' &&
       !user.profile.profileComplete
     ) {
-      // Solo si aún no lo completó en esta sesión del navegador
       const key = `profile_prompted_${currentId}`;
       if (!sessionStorage.getItem(key)) {
         sessionStorage.setItem(key, '1');
-        setProfileOpen(true);
+        setCompleteProfileOpen(true);
       }
     }
   }, [user]);
@@ -110,7 +109,7 @@ function AppShell() {
 
   const openCompleteProfile = useCallback(() => {
     if (!user) { openLogin(); return; }
-    setProfileOpen(true);
+    setCompleteProfileOpen(true);
   }, [user, openLogin]);
 
   const bumpPets = useCallback(() => setPetsRefreshKey((k) => k + 1), []);
@@ -145,9 +144,9 @@ function AppShell() {
         if (user?.role === 'adopter' && !user.profile.profileComplete) {
           notify.warning(
             'Completa tu perfil primero',
-            'Necesitamos ciudad y teléfono antes de agendar una visita.',
+            'Necesitamos tus datos antes de agendar una visita.',
           );
-          setProfileOpen(true);
+          setCompleteProfileOpen(true);
           return;
         }
         setCitaOpen(true);
@@ -182,9 +181,11 @@ function AppShell() {
       <ProfileEditModal
         open={profileOpen}
         onClose={() => setProfileOpen(false)}
-        isOnboarding={
-          user?.role === 'adopter' && !user.profile.profileComplete
-        }
+      />
+
+      <CompleteAdopterProfileModal
+        open={completeProfileOpen}
+        onClose={() => setCompleteProfileOpen(false)}
       />
 
       <CitaFormModal
