@@ -16,6 +16,7 @@ export default function HomePage() {
         refreshKey={ctx.petsRefreshKey}
         onRequireAuth={ctx.openLogin}
         onRequireProfile={ctx.showToast}
+        onCompleteProfile={ctx.openCompleteProfile}
       />
       <Refugios refreshKey={ctx.foundationsRefreshKey} />
       <Donation />

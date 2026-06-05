@@ -19,6 +19,11 @@ export interface ShellContext {
   openPetForm: () => void;
   openProfileEdit: () => void;
   /**
+   * Abre el modal de completar perfil. Lo usan los flujos de adopción y cita
+   * cuando el adoptante no ha completado ciudad y teléfono.
+   */
+  openCompleteProfile: () => void;
+  /**
    * Muestra una notificación. Por defecto info; pasa `type` para success/error/warning.
    */
   showToast: (msg: string, type?: 'success' | 'error' | 'info' | 'warning') => void;

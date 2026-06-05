@@ -98,7 +98,7 @@ export default function FoundationDetailPage() {
       return;
     }
     if (!user.profile.profileComplete) {
-      ctx.showToast('Completa ciudad y teléfono en tu perfil para poder adoptar.', 'warning');
+      ctx.openCompleteProfile();
       return;
     }
     setAdoptingId(pet.id);

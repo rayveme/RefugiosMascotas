@@ -119,10 +119,12 @@ const CARD_W = 272 + 22;
 interface Props {
   onRequireAuth: () => void;
   onRequireProfile: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
+  /** Abre el modal de completar perfil cuando el adoptante tiene datos incompletos. */
+  onCompleteProfile?: () => void;
   refreshKey?: number;
 }
 
-export default function PetCarousel({ onRequireAuth, onRequireProfile, refreshKey }: Props) {
+export default function PetCarousel({ onRequireAuth, onRequireProfile, onCompleteProfile, refreshKey }: Props) {
   const trackRef  = useRef<HTMLDivElement>(null);
   const sectionRef = useReveal<HTMLElement>();
   const headerRef  = useReveal<HTMLDivElement>();
@@ -177,7 +179,11 @@ export default function PetCarousel({ onRequireAuth, onRequireProfile, refreshKe
       return;
     }
     if (!user.profile.profileComplete) {
-      onRequireProfile('Completa ciudad y teléfono en tu perfil para poder adoptar.', 'warning');
+      if (onCompleteProfile) {
+        onCompleteProfile();
+      } else {
+        onRequireProfile('Completa ciudad y teléfono en tu perfil para poder adoptar.', 'warning');
+      }
       return;
     }
     setAdoptingId(pet.id);

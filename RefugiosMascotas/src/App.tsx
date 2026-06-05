@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Navigate,
   Outlet,
@@ -38,6 +38,30 @@ function AppShell() {
   const [petFormOpen, setPetFormOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [citaOpen, setCitaOpen] = useState(false);
+
+  // ── Auto-apertura del perfil tras login con Google ──────────────────────────
+  // Detectamos cuando el usuario pasa de "sin sesión" → "adoptante con perfil
+  // incompleto" y abrimos el modal una sola vez por sesión.
+  const prevUserIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    const currentId = user?.role === 'adopter' ? user.profile.id : null;
+    const wasLoggedOut = prevUserIdRef.current === null;
+    prevUserIdRef.current = currentId;
+
+    if (
+      wasLoggedOut &&
+      currentId !== null &&
+      user?.role === 'adopter' &&
+      !user.profile.profileComplete
+    ) {
+      // Solo si aún no lo completó en esta sesión del navegador
+      const key = `profile_prompted_${currentId}`;
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        setProfileOpen(true);
+      }
+    }
+  }, [user]);
   const [petsRefreshKey, setPetsRefreshKey] = useState(0);
   const [foundationsRefreshKey, setFoundationsRefreshKey] = useState(0);
 
@@ -84,6 +108,11 @@ function AppShell() {
     setProfileOpen(true);
   }, [user, openLogin]);
 
+  const openCompleteProfile = useCallback(() => {
+    if (!user) { openLogin(); return; }
+    setProfileOpen(true);
+  }, [user, openLogin]);
+
   const bumpPets = useCallback(() => setPetsRefreshKey((k) => k + 1), []);
   const bumpFoundations = useCallback(
     () => setFoundationsRefreshKey((k) => k + 1),
@@ -99,6 +128,7 @@ function AppShell() {
     openRegister,
     openPetForm,
     openProfileEdit,
+    openCompleteProfile,
     showToast,
     confirm,
   };
@@ -110,7 +140,18 @@ function AppShell() {
         onRegisterClick={openRegister}
         onPublishPetClick={openPetForm}
         onEditProfileClick={openProfileEdit}
-        onAgendarCitaClick={() => setCitaOpen(true)}
+        onAgendarCitaClick={() => {
+        // Si es adoptante con perfil incompleto, primero completar datos
+        if (user?.role === 'adopter' && !user.profile.profileComplete) {
+          notify.warning(
+            'Completa tu perfil primero',
+            'Necesitamos ciudad y teléfono antes de agendar una visita.',
+          );
+          setProfileOpen(true);
+          return;
+        }
+        setCitaOpen(true);
+      }}
       />
 
       <main>
@@ -141,6 +182,9 @@ function AppShell() {
       <ProfileEditModal
         open={profileOpen}
         onClose={() => setProfileOpen(false)}
+        isOnboarding={
+          user?.role === 'adopter' && !user.profile.profileComplete
+        }
       />
 
       <CitaFormModal
