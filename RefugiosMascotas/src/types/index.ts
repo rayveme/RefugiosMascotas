@@ -81,6 +81,17 @@ export interface AuthFoundation {
   whatsapp: string | null;
   website: string | null;
   responsible: string | null;
+  // Redes sociales
+  instagram: string | null;
+  facebook: string | null;
+  // Operación
+  schedule: string | null;
+  references: string | null;
+  vetName: string | null;
+  vetPhone: string | null;
+  // Legal
+  legalId: string | null;
+  donationClabe: string | null;
 }
 
 export interface AuthAdmin {

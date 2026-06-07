@@ -40,6 +40,17 @@ export function mapFoundation(f: FoundationApi): AuthFoundation {
     whatsapp:    f.whatsapp    ?? null,
     website:     f.website     ?? null,
     responsible: f.responsible ?? null,
+    // Redes sociales
+    instagram:    f.instagram     ?? null,
+    facebook:     f.facebook      ?? null,
+    // Operación
+    schedule:     f.schedule      ?? null,
+    references:   f.references    ?? null,
+    vetName:      f.vet_name      ?? null,
+    vetPhone:     f.vet_phone     ?? null,
+    // Legal
+    legalId:       f.legal_id      ?? null,
+    donationClabe: f.donation_clabe ?? null,
   };
 }
 

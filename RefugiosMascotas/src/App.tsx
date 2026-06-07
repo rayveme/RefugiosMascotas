@@ -13,6 +13,7 @@ import AuthModal from "./components/auth/AuthModal/AuthModal";
 import PetForm from "./components/forms/PetForm/PetForm";
 import ProfileEditModal from "./components/forms/ProfileEditModal/ProfileEditModal";
 import CompleteAdopterProfileModal from "./components/forms/CompleteAdopterProfileModal/CompleteAdopterProfileModal";
+import CompleteFoundationProfileModal from "./components/forms/CompleteFoundationProfileModal/CompleteFoundationProfileModal";
 import RegistroRefugio from "./components/Registrorefugio/Registrorefugio";
 import DashboardRefugio from "./components/DashboardRefugio/Dashboardrefugio";
 import CitaFormModal from "./components/CitaCTA/CitaFormModal";
@@ -39,25 +40,30 @@ function AppShell() {
   const [petFormOpen, setPetFormOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [completeProfileOpen, setCompleteProfileOpen] = useState(false);
+  const [completeFoundationOpen, setCompleteFoundationOpen] = useState(false);
   const [citaOpen, setCitaOpen] = useState(false);
 
-  // ── Auto-apertura post-login cuando el perfil del adoptante está incompleto ──
+  // ── Auto-apertura post-login cuando el perfil está incompleto ─────────────
   const prevUserIdRef = useRef<number | null>(null);
   useEffect(() => {
-    const currentId = user?.role === 'adopter' ? user.profile.id : null;
+    const currentRole = user?.role ?? null;
+    const currentId   = user ? (user.profile as { id: number }).id : null;
     const wasLoggedOut = prevUserIdRef.current === null;
     prevUserIdRef.current = currentId;
 
-    if (
-      wasLoggedOut &&
-      currentId !== null &&
-      user?.role === 'adopter' &&
-      !user.profile.profileComplete
-    ) {
+    if (!wasLoggedOut || currentId === null) return;
+
+    if (currentRole === 'adopter' && user?.role === 'adopter' && !user.profile.profileComplete) {
       const key = `profile_prompted_${currentId}`;
       if (!sessionStorage.getItem(key)) {
         sessionStorage.setItem(key, '1');
         setCompleteProfileOpen(true);
+      }
+    } else if (currentRole === 'foundation' && user?.role === 'foundation' && !user.profile.profileComplete) {
+      const key = `foundation_prompted_${currentId}`;
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        setCompleteFoundationOpen(true);
       }
     }
   }, [user]);
@@ -104,7 +110,11 @@ function AppShell() {
       return;
     }
 
-    // Si el adoptante no ha completado su expediente, mandamos al flujo completo
+    // Si el perfil está incompleto → flujo de completar
+    if (user.role === 'foundation' && !user.profile.profileComplete) {
+      setCompleteFoundationOpen(true);
+      return;
+    }
     if (user.role === 'adopter' && !user.profile.profileComplete) {
       setCompleteProfileOpen(true);
       return;
@@ -115,7 +125,11 @@ function AppShell() {
 
   const openCompleteProfile = useCallback(() => {
     if (!user) { openLogin(); return; }
-    setCompleteProfileOpen(true);
+    if (user.role === 'foundation') {
+      setCompleteFoundationOpen(true);
+    } else {
+      setCompleteProfileOpen(true);
+    }
   }, [user, openLogin]);
 
   const bumpPets = useCallback(() => setPetsRefreshKey((k) => k + 1), []);
@@ -192,6 +206,11 @@ function AppShell() {
       <CompleteAdopterProfileModal
         open={completeProfileOpen}
         onClose={() => setCompleteProfileOpen(false)}
+      />
+
+      <CompleteFoundationProfileModal
+        open={completeFoundationOpen}
+        onClose={() => setCompleteFoundationOpen(false)}
       />
 
       <CitaFormModal

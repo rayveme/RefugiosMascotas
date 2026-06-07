@@ -54,3 +54,14 @@ class FoundationRegister(BaseModel):
     whatsapp: str | None = Field(None, max_length=30)
     website: str | None = Field(None, max_length=255)
     responsible: str | None = Field(None, max_length=120)
+    # Redes sociales
+    instagram: str | None = Field(None, max_length=255)
+    facebook: str | None = Field(None, max_length=255)
+    # Operación
+    schedule: str | None = Field(None, max_length=500)
+    references: str | None = Field(None, max_length=1000)
+    vet_name: str | None = Field(None, max_length=120)
+    vet_phone: str | None = Field(None, max_length=30)
+    # Legal
+    legal_id: str | None = Field(None, max_length=50)
+    donation_clabe: str | None = Field(None, max_length=20)

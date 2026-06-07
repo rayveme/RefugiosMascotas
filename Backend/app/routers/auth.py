@@ -97,6 +97,17 @@ async def register_foundation(
         whatsapp=payload.whatsapp,
         website=payload.website,
         responsible=payload.responsible,
+        # Redes sociales (opcionales)
+        instagram=payload.instagram,
+        facebook=payload.facebook,
+        # Operación (opcionales)
+        schedule=payload.schedule,
+        references=payload.references,
+        vet_name=payload.vet_name,
+        vet_phone=payload.vet_phone,
+        # Legal (opcionales)
+        legal_id=payload.legal_id,
+        donation_clabe=payload.donation_clabe,
     )
     session.add(foundation)
     await session.commit()

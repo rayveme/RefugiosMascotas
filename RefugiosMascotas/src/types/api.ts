@@ -46,6 +46,17 @@ export interface FoundationApi {
   whatsapp: string | null;
   website: string | null;
   responsible: string | null;
+  // Redes sociales
+  instagram: string | null;
+  facebook: string | null;
+  // Operación
+  schedule: string | null;
+  references: string | null;
+  vet_name: string | null;
+  vet_phone: string | null;
+  // Legal
+  legal_id: string | null;
+  donation_clabe: string | null;
 }
 
 export interface AdminApi {
@@ -122,6 +133,17 @@ export interface FoundationRegisterPayload {
   whatsapp?: string;
   website?: string;
   responsible?: string;
+  // Redes sociales
+  instagram?: string;
+  facebook?: string;
+  // Operación
+  schedule?: string;
+  references?: string;
+  vet_name?: string;
+  vet_phone?: string;
+  // Legal
+  legal_id?: string;
+  donation_clabe?: string;
 }
 
 export interface LoginPayload {
@@ -199,9 +221,20 @@ export interface AdminFoundationPatchPayload {
   state?:       string | null;
   postal_code?: string | null;
   // Contacto adicional
-  whatsapp?:    string | null;
-  website?:     string | null;
-  responsible?: string | null;
+  whatsapp?:       string | null;
+  website?:        string | null;
+  responsible?:    string | null;
+  // Redes sociales
+  instagram?:      string | null;
+  facebook?:       string | null;
+  // Operación
+  schedule?:       string | null;
+  references?:     string | null;
+  vet_name?:       string | null;
+  vet_phone?:      string | null;
+  // Legal
+  legal_id?:       string | null;
+  donation_clabe?: string | null;
 }
 
 export interface AdminAdopterPatchPayload {

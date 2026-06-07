@@ -7,10 +7,10 @@ import type { ShellContext } from '../../types/shell';
 import './Registrorefugio.css';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Step = 1 | 2 | 3 | 4;
+type Step = 1 | 2 | 3 | 4 | 5;
 
 interface FormState {
-  // Paso 1
+  // Paso 1 — Básico
   nombre: string;
   tipo: string;
   descripcion: string;
@@ -18,18 +18,30 @@ interface FormState {
   capacidad: string;
   animales: string[];
   servicios: string[];
-  // Paso 2
+  // Paso 2 — Ubicación
   calle: string;
   colonia: string;
   ciudad: string;
   estado: string;
   cp: string;
-  // Paso 3
+  // Paso 3 — Contacto y redes
   email: string;
   telefono: string;
   whatsapp: string;
   sitio: string;
-  // Paso 4
+  instagram: string;
+  facebook: string;
+  // Paso 4 — Legal y referencias
+  legalId: string;
+  schedule: string;
+  vetName: string;
+  vetPhone: string;
+  ref1Name: string;
+  ref1Phone: string;
+  ref2Name: string;
+  ref2Phone: string;
+  donationClabe: string;
+  // Paso 5 — Cuenta
   responsable: string;
   emailCuenta: string;
   password: string;
@@ -40,20 +52,29 @@ const INITIAL_FORM: FormState = {
   nombre: '', tipo: '', descripcion: '', anio: '', capacidad: '',
   animales: [], servicios: [],
   calle: '', colonia: '', ciudad: '', estado: '', cp: '',
-  email: '', telefono: '', whatsapp: '', sitio: '',
+  email: '', telefono: '', whatsapp: '', sitio: '', instagram: '', facebook: '',
+  legalId: '', schedule: '', vetName: '', vetPhone: '',
+  ref1Name: '', ref1Phone: '', ref2Name: '', ref2Phone: '', donationClabe: '',
   responsable: '', emailCuenta: '', password: '', confirmar: '',
 };
 
 const ANIMALES  = ['Perros', 'Gatos', 'Conejos', 'Aves', 'Reptiles', 'Otros'];
 const SERVICIOS = ['Esterilización', 'Vacunación', 'Microchip', 'Adopción', 'Foster', 'Rescate'];
-const ESTADOS   = ['CDMX', 'Jalisco', 'Estado de México', 'Nuevo León', 'Puebla',
-                   'Veracruz', 'Yucatán', 'Querétaro', 'Guanajuato', 'Chihuahua'];
+const ESTADOS   = [
+  'Aguascalientes', 'Baja California', 'Baja California Sur', 'Campeche',
+  'Chiapas', 'Chihuahua', 'Ciudad de México', 'Coahuila', 'Colima',
+  'Durango', 'Estado de México', 'Guanajuato', 'Guerrero', 'Hidalgo',
+  'Jalisco', 'Michoacán', 'Morelos', 'Nayarit', 'Nuevo León', 'Oaxaca',
+  'Puebla', 'Querétaro', 'Quintana Roo', 'San Luis Potosí', 'Sinaloa',
+  'Sonora', 'Tabasco', 'Tamaulipas', 'Tlaxcala', 'Veracruz', 'Yucatán', 'Zacatecas',
+];
 
 const STEPS = [
-  { id: 1, label: 'Básico'    },
-  { id: 2, label: 'Ubicación' },
-  { id: 3, label: 'Contacto'  },
-  { id: 4, label: 'Cuenta'    },
+  { id: 1, label: 'Básico'     },
+  { id: 2, label: 'Ubicación'  },
+  { id: 3, label: 'Contacto'   },
+  { id: 4, label: 'Legal'      },
+  { id: 5, label: 'Cuenta'     },
 ] as const;
 
 // ─── Small helpers ────────────────────────────────────────────────────────────
@@ -134,7 +155,7 @@ export default function RegistroRefugio() {
       if (!form.email.includes('@')) e.email    = 'Email inválido';
       if (!form.telefono.trim())     e.telefono = 'El teléfono es requerido';
     }
-    if (step === 4) {
+    if (step === 5) {
       if (!form.responsable.trim())       e.responsable  = 'El nombre es requerido';
       if (!form.emailCuenta.includes('@')) e.emailCuenta = 'Email inválido';
       if (form.password.length < 8)       e.password    = 'Mínimo 8 caracteres';
@@ -144,7 +165,7 @@ export default function RegistroRefugio() {
     return Object.keys(e).length === 0;
   };
 
-  const next  = () => { if (validate()) setStep(s => Math.min(s + 1, 4) as Step); };
+  const next  = () => { if (validate()) setStep(s => Math.min(s + 1, 5) as Step); };
   const prev  = () => setStep(s => Math.max(s - 1, 1) as Step);
 const submit = async () => {
     if (!validate()) return;
@@ -172,22 +193,39 @@ const submit = async () => {
       // Dirección completa
       const fullAddress = [form.calle, form.colonia].filter(Boolean).join(', ');
 
+      // Construir referencias
+      const refsLines: string[] = [];
+      if (form.ref1Name.trim()) refsLines.push(`${form.ref1Name.trim()} — ${form.ref1Phone.trim()}`);
+      if (form.ref2Name.trim()) refsLines.push(`${form.ref2Name.trim()} — ${form.ref2Phone.trim()}`);
+      const referencesText = refsLines.join('\n') || undefined;
+
       await registerFoundation({
-        email:        form.emailCuenta.trim(),
-        password:     form.password,
-        name:         form.nombre.trim(),
-        city:         form.ciudad.trim(),
-        phone:        form.telefono.trim() || undefined,
-        description:  fullDescription || undefined,
-        years:        yearsOp,
+        email:          form.emailCuenta.trim(),
+        password:       form.password,
+        name:           form.nombre.trim(),
+        city:           form.ciudad.trim(),
+        phone:          form.telefono.trim() || undefined,
+        description:    fullDescription || undefined,
+        years:          yearsOp,
         // Ubicación
-        address:      fullAddress || undefined,
-        state:        form.estado || undefined,
-        postal_code:  form.cp || undefined,
+        address:        fullAddress || undefined,
+        state:          form.estado || undefined,
+        postal_code:    form.cp || undefined,
         // Contacto adicional
-        whatsapp:     form.whatsapp.trim() || undefined,
-        website:      form.sitio.trim() || undefined,
-        responsible:  form.responsable.trim() || undefined,
+        whatsapp:       form.whatsapp.trim()  || undefined,
+        website:        form.sitio.trim()     || undefined,
+        responsible:    form.responsable.trim() || undefined,
+        // Redes sociales
+        instagram:      form.instagram.trim() || undefined,
+        facebook:       form.facebook.trim()  || undefined,
+        // Operación
+        schedule:       form.schedule.trim()  || undefined,
+        references:     referencesText,
+        vet_name:       form.vetName.trim()   || undefined,
+        vet_phone:      form.vetPhone.trim()  || undefined,
+        // Legal
+        legal_id:       form.legalId.trim()   || undefined,
+        donation_clabe: form.donationClabe.trim() || undefined,
       });
 
       setSubmitted(true);
@@ -387,9 +425,9 @@ const submit = async () => {
 
           {step === 3 && (
             <>
-              <h2 className="rr-card__title">Información de contacto</h2>
+              <h2 className="rr-card__title">Contacto y redes sociales</h2>
 
-              <Field label="Correo electrónico" error={errors.email}>
+              <Field label="Correo electrónico de contacto público" error={errors.email}>
                 <input className="rr-input" type="email" placeholder="contacto@mirefugio.org"
                   value={form.email} onChange={e => set('email', e.target.value)} />
               </Field>
@@ -410,6 +448,17 @@ const submit = async () => {
                   value={form.sitio} onChange={e => set('sitio', e.target.value)} />
               </Field>
 
+              <div className="rr-row2">
+                <Field label="Instagram">
+                  <input className="rr-input" placeholder="@mirefugio o URL completa"
+                    value={form.instagram} onChange={e => set('instagram', e.target.value)} />
+                </Field>
+                <Field label="Facebook">
+                  <input className="rr-input" placeholder="facebook.com/mirefugio"
+                    value={form.facebook} onChange={e => set('facebook', e.target.value)} />
+                </Field>
+              </div>
+
               <div className="rr-info-box">
                 📋 Tu información será visible para familias interesadas en adoptar.
                 Puedes modificarla en cualquier momento desde tu panel.
@@ -419,9 +468,70 @@ const submit = async () => {
 
           {step === 4 && (
             <>
+              <h2 className="rr-card__title">Legal, operación y referencias</h2>
+
+              <div className="rr-row2">
+                <Field label="RFC o Número de registro legal">
+                  <input className="rr-input" placeholder="XAXX010101000 / Registro AC"
+                    value={form.legalId} onChange={e => set('legalId', e.target.value)} />
+                </Field>
+                <Field label="CLABE interbancaria para donaciones">
+                  <input className="rr-input" placeholder="18 dígitos" maxLength={18}
+                    value={form.donationClabe} onChange={e => set('donationClabe', e.target.value)} />
+                </Field>
+              </div>
+
+              <Field label="Horario de atención / visitas">
+                <input className="rr-input" placeholder="Ej. Lunes a viernes 10:00-18:00, sábados 10:00-14:00"
+                  value={form.schedule} onChange={e => set('schedule', e.target.value)} />
+              </Field>
+
+              <div className="rr-row2">
+                <Field label="Nombre del veterinario de cabecera">
+                  <input className="rr-input" placeholder="Dr. Juan Pérez"
+                    value={form.vetName} onChange={e => set('vetName', e.target.value)} />
+                </Field>
+                <Field label="Teléfono del veterinario">
+                  <input className="rr-input" type="tel" placeholder="+52 55 9876 5432"
+                    value={form.vetPhone} onChange={e => set('vetPhone', e.target.value)} />
+                </Field>
+              </div>
+
+              <div className="rr-section-label">Referencias (personas o instituciones que nos pueden avalar)</div>
+
+              <div className="rr-row2">
+                <Field label="Referencia 1 — Nombre">
+                  <input className="rr-input" placeholder="Nombre completo"
+                    value={form.ref1Name} onChange={e => set('ref1Name', e.target.value)} />
+                </Field>
+                <Field label="Referencia 1 — Teléfono">
+                  <input className="rr-input" type="tel" placeholder="+52 55 0000 0000"
+                    value={form.ref1Phone} onChange={e => set('ref1Phone', e.target.value)} />
+                </Field>
+              </div>
+
+              <div className="rr-row2">
+                <Field label="Referencia 2 — Nombre">
+                  <input className="rr-input" placeholder="Nombre completo"
+                    value={form.ref2Name} onChange={e => set('ref2Name', e.target.value)} />
+                </Field>
+                <Field label="Referencia 2 — Teléfono">
+                  <input className="rr-input" type="tel" placeholder="+52 55 0000 0000"
+                    value={form.ref2Phone} onChange={e => set('ref2Phone', e.target.value)} />
+                </Field>
+              </div>
+
+              <div className="rr-info-box">
+                🔒 Esta información es confidencial y solo la revisa el equipo administrador para validar tu solicitud.
+              </div>
+            </>
+          )}
+
+          {step === 5 && (
+            <>
               <h2 className="rr-card__title">Crea tu cuenta</h2>
 
-              <Field label="Nombre del responsable" error={errors.responsable}>
+              <Field label="Nombre del responsable principal" error={errors.responsable}>
                 <input className="rr-input" placeholder="María García López"
                   value={form.responsable} onChange={e => set('responsable', e.target.value)} />
               </Field>
@@ -497,13 +607,13 @@ const submit = async () => {
           )}
           <button
             className="rr-btn-primary"
-            onClick={step === 4 ? submit : next}
+            onClick={step === 5 ? submit : next}
             disabled={submitting}
           >
-            {step === 4
+            {step === 5
               ? (submitting ? 'Registrando…' : 'Registrar refugio 🐾')
               : 'Continuar'}
-            {step < 4 && (
+            {step < 5 && (
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>

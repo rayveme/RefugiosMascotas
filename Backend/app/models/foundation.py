@@ -43,6 +43,20 @@ class Foundation(Base, TimestampMixin):
     website: Mapped[str | None] = mapped_column(String(255), default=None)
     responsible: Mapped[str | None] = mapped_column(String(120), default=None)
 
+    # ── Redes sociales ────────────────────────────────────────────────────────
+    instagram: Mapped[str | None] = mapped_column(String(255), default=None)
+    facebook: Mapped[str | None] = mapped_column(String(255), default=None)
+
+    # ── Operación ─────────────────────────────────────────────────────────────
+    schedule: Mapped[str | None] = mapped_column(String(500), default=None)      # Horario de atención
+    references: Mapped[str | None] = mapped_column(String(1000), default=None)  # Referencias
+    vet_name: Mapped[str | None] = mapped_column(String(120), default=None)      # Veterinario nombre
+    vet_phone: Mapped[str | None] = mapped_column(String(30), default=None)      # Veterinario tel
+
+    # ── Legal ─────────────────────────────────────────────────────────────────
+    legal_id: Mapped[str | None] = mapped_column(String(50), default=None)       # RFC / Registro AC
+    donation_clabe: Mapped[str | None] = mapped_column(String(20), default=None) # CLABE donaciones
+
     years: Mapped[int] = mapped_column(Integer, default=0)
     adoptions: Mapped[int] = mapped_column(Integer, default=0)
 
@@ -69,4 +83,11 @@ class Foundation(Base, TimestampMixin):
 
     @property
     def profile_complete(self) -> bool:
-        return bool(self.name and self.city and self.phone and self.description)
+        return bool(
+            self.name
+            and self.city
+            and self.city != "Sin ciudad"
+            and self.phone
+            and self.description
+            and self.responsible
+        )

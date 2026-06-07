@@ -40,6 +40,15 @@ _ENSURE_COLUMNS = [
     # Google OAuth — google_id en adoptantes y fundaciones
     "ALTER TABLE adopters    ADD COLUMN IF NOT EXISTS google_id VARCHAR(64) UNIQUE",
     "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS google_id VARCHAR(64) UNIQUE",
+    # Redes sociales, operación y datos legales de fundaciones
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS instagram       VARCHAR(255)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS facebook        VARCHAR(255)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS schedule        VARCHAR(500)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS references      VARCHAR(1000)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS vet_name        VARCHAR(120)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS vet_phone       VARCHAR(30)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS legal_id        VARCHAR(50)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS donation_clabe  VARCHAR(20)",
 ]
 
 

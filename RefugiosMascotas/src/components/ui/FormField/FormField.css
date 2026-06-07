@@ -122,6 +122,47 @@
 .btn--full { width: 100%; justify-content: center; }
 .btn[disabled] { opacity: 0.55; cursor: not-allowed; transform: none !important; }
 
+/* Pills genéricos para checkboxes tipo chip (ej. animales, servicios) */
+.form-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.form-pill {
+  padding: 5px 14px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--cream-dark);
+  background: transparent;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.form-pill--on {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #fff;
+}
+
+.form-pill:hover:not(.form-pill--on) {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.form-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 4px;
+  margin-bottom: -4px;
+}
+
 /* Banner de onboarding en el modal de completar perfil (post-registro con Google) */
 .profile-onboarding-banner {
   display: flex;
