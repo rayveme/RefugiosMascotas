@@ -104,6 +104,12 @@ function AppShell() {
       return;
     }
 
+    // Si el adoptante no ha completado su expediente, mandamos al flujo completo
+    if (user.role === 'adopter' && !user.profile.profileComplete) {
+      setCompleteProfileOpen(true);
+      return;
+    }
+
     setProfileOpen(true);
   }, [user, openLogin]);
 
