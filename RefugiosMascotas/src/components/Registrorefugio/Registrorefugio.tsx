@@ -25,7 +25,7 @@ interface FormState {
   estado: string;
   cp: string;
   // Paso 3 — Contacto y redes
-  email: string;
+  responsable: string;
   telefono: string;
   whatsapp: string;
   sitio: string;
@@ -42,7 +42,6 @@ interface FormState {
   ref2Phone: string;
   donationClabe: string;
   // Paso 5 — Cuenta
-  responsable: string;
   emailCuenta: string;
   password: string;
   confirmar: string;
@@ -52,10 +51,10 @@ const INITIAL_FORM: FormState = {
   nombre: '', tipo: '', descripcion: '', anio: '', capacidad: '',
   animales: [], servicios: [],
   calle: '', colonia: '', ciudad: '', estado: '', cp: '',
-  email: '', telefono: '', whatsapp: '', sitio: '', instagram: '', facebook: '',
+  responsable: '', telefono: '', whatsapp: '', sitio: '', instagram: '', facebook: '',
   legalId: '', schedule: '', vetName: '', vetPhone: '',
   ref1Name: '', ref1Phone: '', ref2Name: '', ref2Phone: '', donationClabe: '',
-  responsable: '', emailCuenta: '', password: '', confirmar: '',
+  emailCuenta: '', password: '', confirmar: '',
 };
 
 const ANIMALES  = ['Perros', 'Gatos', 'Conejos', 'Aves', 'Reptiles', 'Otros'];
@@ -152,13 +151,12 @@ export default function RegistroRefugio() {
       if (!form.estado)        e.estado = 'Selecciona un estado';
     }
     if (step === 3) {
-      if (!form.email.includes('@')) e.email    = 'Email inválido';
-      if (!form.telefono.trim())     e.telefono = 'El teléfono es requerido';
+      if (!form.responsable.trim()) e.responsable = 'El nombre del responsable es requerido';
+      if (!form.telefono.trim())    e.telefono    = 'El teléfono es requerido';
     }
     if (step === 5) {
-      if (!form.responsable.trim())       e.responsable  = 'El nombre es requerido';
       if (!form.emailCuenta.includes('@')) e.emailCuenta = 'Email inválido';
-      if (form.password.length < 8)       e.password    = 'Mínimo 8 caracteres';
+      if (form.password.length < 8)        e.password    = 'Mínimo 8 caracteres';
       if (form.password !== form.confirmar) e.confirmar  = 'Las contraseñas no coinciden';
     }
     setErrors(e);
@@ -427,9 +425,9 @@ const submit = async () => {
             <>
               <h2 className="rr-card__title">Contacto y redes sociales</h2>
 
-              <Field label="Correo electrónico de contacto público" error={errors.email}>
-                <input className="rr-input" type="email" placeholder="contacto@mirefugio.org"
-                  value={form.email} onChange={e => set('email', e.target.value)} />
+              <Field label="Nombre del responsable principal" error={errors.responsable}>
+                <input className="rr-input" placeholder="María García López"
+                  value={form.responsable} onChange={e => set('responsable', e.target.value)} />
               </Field>
 
               <div className="rr-row2">
@@ -530,11 +528,6 @@ const submit = async () => {
           {step === 5 && (
             <>
               <h2 className="rr-card__title">Crea tu cuenta</h2>
-
-              <Field label="Nombre del responsable principal" error={errors.responsable}>
-                <input className="rr-input" placeholder="María García López"
-                  value={form.responsable} onChange={e => set('responsable', e.target.value)} />
-              </Field>
 
               <Field label="Correo de acceso" error={errors.emailCuenta}>
                 <input className="rr-input" type="email" placeholder="tu@email.com"
