@@ -57,6 +57,12 @@ class Foundation(Base, TimestampMixin):
     legal_id: Mapped[str | None] = mapped_column(String(50), default=None)       # RFC / Registro AC
     donation_clabe: Mapped[str | None] = mapped_column(String(20), default=None) # CLABE donaciones
 
+    # ── Documentos de verificación ────────────────────────────────────────────
+    id_front_url: Mapped[str | None] = mapped_column(String(500), default=None)        # Identificación del responsable
+    acta_url: Mapped[str | None] = mapped_column(String(500), default=None)            # Acta constitutiva / Registro legal
+    proof_address_url: Mapped[str | None] = mapped_column(String(500), default=None)   # Comprobante de domicilio
+    refuge_photos_urls: Mapped[str | None] = mapped_column(String(2000), default=None) # Fotos del refugio (separadas por coma)
+
     years: Mapped[int] = mapped_column(Integer, default=0)
     adoptions: Mapped[int] = mapped_column(Integer, default=0)
 

@@ -14,7 +14,7 @@ interface Props {
 type Step = 1 | 2 | 3 | 4;
 const STEPS = ['Básico', 'Ubicación', 'Contacto', 'Legal'];
 
-const ANIMALES  = ['Perros', 'Gatos', 'Conejos', 'Aves', 'Reptiles', 'Otros'];
+const ANIMALES  = ['Perros', 'Gatos'];
 const SERVICIOS = ['Esterilización', 'Vacunación', 'Microchip', 'Adopción', 'Foster', 'Rescate'];
 const ESTADOS   = [
   'Aguascalientes', 'Baja California', 'Baja California Sur', 'Campeche',

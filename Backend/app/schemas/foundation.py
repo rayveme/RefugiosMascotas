@@ -81,3 +81,8 @@ class FoundationRead(FoundationBase):
     profile_complete: bool
     status: FoundationStatus
     created_at: datetime
+    # Documentos de verificación
+    id_front_url: str | None = None
+    acta_url: str | None = None
+    proof_address_url: str | None = None
+    refuge_photos_urls: str | None = None

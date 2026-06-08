@@ -49,6 +49,11 @@ _ENSURE_COLUMNS = [
     "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS vet_phone       VARCHAR(30)",
     "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS legal_id        VARCHAR(50)",
     "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS donation_clabe  VARCHAR(20)",
+    # Documentos de verificación del refugio
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS id_front_url       VARCHAR(500)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS acta_url           VARCHAR(500)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS proof_address_url  VARCHAR(500)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS refuge_photos_urls VARCHAR(2000)",
 ]
 
 

@@ -23,6 +23,20 @@ export const foundationsApi = {
     const { data } = await apiClient.get<FoundationApi>('/foundations/me');
     return mapFoundation(data);
   },
+  async uploadDocuments(params: {
+    idFront?:      File | null;
+    acta?:         File | null;
+    proofAddress?: File | null;
+    refugePhotos?: File[];
+  }): Promise<AuthFoundation> {
+    const form = new FormData();
+    if (params.idFront)      form.append('id_front',      params.idFront);
+    if (params.acta)         form.append('acta',          params.acta);
+    if (params.proofAddress) form.append('proof_address', params.proofAddress);
+    (params.refugePhotos ?? []).forEach(f => form.append('refuge_photos', f));
+    const { data } = await apiClient.post<FoundationApi>('/foundations/me/documents', form);
+    return mapFoundation(data);
+  },
   async updateMe(payload: Partial<{
     name: string;
     city: string;
