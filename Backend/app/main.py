@@ -44,7 +44,7 @@ _ENSURE_COLUMNS = [
     "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS instagram       VARCHAR(255)",
     "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS facebook        VARCHAR(255)",
     "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS schedule        VARCHAR(500)",
-    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS references      VARCHAR(1000)",
+    'ALTER TABLE foundations ADD COLUMN IF NOT EXISTS "references"    VARCHAR(1000)',
     "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS vet_name        VARCHAR(120)",
     "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS vet_phone       VARCHAR(30)",
     "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS legal_id        VARCHAR(50)",
