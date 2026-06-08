@@ -9,32 +9,38 @@ import EditFoundationModal from '../components/admin/EditFoundationModal';
 import EditAdopterModal from '../components/admin/EditAdopterModal';
 import './AdminPage.css';
 
-/** Fila expandible con el detalle completo de una fundación pendiente */
+/** Fila expandible con el detalle completo de una fundación */
 function FoundationDetailRow({ f }: { f: AuthFoundation }) {
   const [open, setOpen] = useState(false);
 
-  const fullAddress = [f.address, f.city, f.state, f.postalCode]
-    .filter(Boolean).join(', ');
+  const hasLocation = f.address || f.state || f.postalCode;
+  const hasSocial   = f.instagram || f.facebook || f.website;
+  const hasOps      = f.schedule || f.vetName || f.vetPhone || f.references;
+  const hasLegal    = f.legalId || f.donationClabe;
+  const photos      = f.refugePhotosUrls
+    ? f.refugePhotosUrls.split(',').filter(Boolean)
+    : [];
+  const hasDocs     = f.idFrontUrl || f.actaUrl || f.proofAddressUrl || photos.length > 0;
 
   return (
     <>
       {open && (
         <div className="admin-detail-panel">
           <div className="admin-detail-grid">
-            {/* Contacto */}
+
+            {/* ── Contacto ── */}
             <div className="admin-detail-section">
               <h4 className="admin-detail-section__title">📞 Contacto</h4>
               <ul className="admin-detail-list">
                 <li><span>Email</span><strong>{f.email}</strong></li>
+                {f.responsible && <li><span>Responsable</span><strong>{f.responsible}</strong></li>}
                 {f.phone       && <li><span>Teléfono</span><strong>{f.phone}</strong></li>}
                 {f.whatsapp    && <li><span>WhatsApp</span><strong>{f.whatsapp}</strong></li>}
-                {f.website     && <li><span>Sitio web</span><a href={f.website} target="_blank" rel="noopener noreferrer">{f.website}</a></li>}
-                {f.responsible && <li><span>Responsable</span><strong>{f.responsible}</strong></li>}
               </ul>
             </div>
 
-            {/* Ubicación */}
-            {fullAddress && (
+            {/* ── Ubicación ── */}
+            {hasLocation && (
               <div className="admin-detail-section">
                 <h4 className="admin-detail-section__title">📍 Ubicación</h4>
                 <ul className="admin-detail-list">
@@ -46,14 +52,94 @@ function FoundationDetailRow({ f }: { f: AuthFoundation }) {
               </div>
             )}
 
-            {/* Sobre el refugio */}
+            {/* ── Sobre el refugio ── */}
             <div className="admin-detail-section">
               <h4 className="admin-detail-section__title">🏠 Sobre el refugio</h4>
               <ul className="admin-detail-list">
                 <li><span>Años de operación</span><strong>{f.years} año{f.years !== 1 ? 's' : ''}</strong></li>
-                {f.description && <li className="admin-detail-list__full"><span>Descripción</span><p>{f.description}</p></li>}
+                {f.description && (
+                  <li className="admin-detail-list__full">
+                    <span>Descripción</span>
+                    <p style={{ whiteSpace: 'pre-line' }}>{f.description}</p>
+                  </li>
+                )}
               </ul>
             </div>
+
+            {/* ── Redes sociales y web ── */}
+            {hasSocial && (
+              <div className="admin-detail-section">
+                <h4 className="admin-detail-section__title">🌐 Web y redes</h4>
+                <ul className="admin-detail-list">
+                  {f.website   && <li><span>Sitio web</span><a href={f.website} target="_blank" rel="noopener noreferrer">{f.website}</a></li>}
+                  {f.instagram && <li><span>Instagram</span><a href={f.instagram.startsWith('http') ? f.instagram : `https://instagram.com/${f.instagram.replace('@','')}`} target="_blank" rel="noopener noreferrer">{f.instagram}</a></li>}
+                  {f.facebook  && <li><span>Facebook</span><a href={f.facebook.startsWith('http') ? f.facebook : `https://facebook.com/${f.facebook}`} target="_blank" rel="noopener noreferrer">{f.facebook}</a></li>}
+                </ul>
+              </div>
+            )}
+
+            {/* ── Operación ── */}
+            {hasOps && (
+              <div className="admin-detail-section">
+                <h4 className="admin-detail-section__title">⚙️ Operación</h4>
+                <ul className="admin-detail-list">
+                  {f.schedule  && <li className="admin-detail-list__full"><span>Horario</span><p>{f.schedule}</p></li>}
+                  {f.vetName   && <li><span>Veterinario</span><strong>{f.vetName}</strong></li>}
+                  {f.vetPhone  && <li><span>Tel. veterinario</span><strong>{f.vetPhone}</strong></li>}
+                  {f.references && (
+                    <li className="admin-detail-list__full">
+                      <span>Referencias</span>
+                      <p style={{ whiteSpace: 'pre-line' }}>{f.references}</p>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
+
+            {/* ── Legal ── */}
+            {hasLegal && (
+              <div className="admin-detail-section">
+                <h4 className="admin-detail-section__title">⚖️ Legal</h4>
+                <ul className="admin-detail-list">
+                  {f.legalId       && <li><span>RFC / Registro</span><strong>{f.legalId}</strong></li>}
+                  {f.donationClabe && <li><span>CLABE donaciones</span><strong>{f.donationClabe}</strong></li>}
+                </ul>
+              </div>
+            )}
+
+            {/* ── Documentos ── */}
+            {hasDocs && (
+              <div className="admin-detail-section admin-detail-section--full">
+                <h4 className="admin-detail-section__title">📎 Documentos adjuntos</h4>
+                <div className="admin-docs-grid">
+                  {f.idFrontUrl && (
+                    <a className="admin-doc-card" href={f.idFrontUrl} target="_blank" rel="noopener noreferrer">
+                      <span className="admin-doc-card__icon">🪪</span>
+                      <span>Identificación del responsable</span>
+                    </a>
+                  )}
+                  {f.actaUrl && (
+                    <a className="admin-doc-card" href={f.actaUrl} target="_blank" rel="noopener noreferrer">
+                      <span className="admin-doc-card__icon">📋</span>
+                      <span>Acta constitutiva / Registro</span>
+                    </a>
+                  )}
+                  {f.proofAddressUrl && (
+                    <a className="admin-doc-card" href={f.proofAddressUrl} target="_blank" rel="noopener noreferrer">
+                      <span className="admin-doc-card__icon">🏠</span>
+                      <span>Comprobante de domicilio</span>
+                    </a>
+                  )}
+                  {photos.map((url, i) => (
+                    <a key={i} className="admin-doc-card admin-doc-card--photo" href={url} target="_blank" rel="noopener noreferrer">
+                      <img src={url} alt={`Foto del refugio ${i + 1}`} />
+                      <span>Foto {i + 1}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
           </div>
         </div>
       )}

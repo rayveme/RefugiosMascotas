@@ -92,6 +92,11 @@ export interface AuthFoundation {
   // Legal
   legalId: string | null;
   donationClabe: string | null;
+  // Documentos de verificación
+  idFrontUrl: string | null;
+  actaUrl: string | null;
+  proofAddressUrl: string | null;
+  refugePhotosUrls: string | null;
 }
 
 export interface AuthAdmin {

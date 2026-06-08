@@ -34,6 +34,17 @@ export default function EditFoundationModal({ foundation, onClose, onSaved }: Pr
     whatsapp:    '',
     website:     '',
     responsible: '',
+    // Redes sociales
+    instagram:   '',
+    facebook:    '',
+    // Operación
+    schedule:    '',
+    vetName:     '',
+    vetPhone:    '',
+    references:  '',
+    // Legal
+    legalId:       '',
+    donationClabe: '',
   });
   const [errors, setErrors]   = useState<Record<string, string>>({});
   const [saving, setSaving]   = useState(false);
@@ -55,6 +66,14 @@ export default function EditFoundationModal({ foundation, onClose, onSaved }: Pr
       whatsapp:    foundation.whatsapp    ?? '',
       website:     foundation.website     ?? '',
       responsible: foundation.responsible ?? '',
+      instagram:   foundation.instagram   ?? '',
+      facebook:    foundation.facebook    ?? '',
+      schedule:    foundation.schedule    ?? '',
+      vetName:     foundation.vetName     ?? '',
+      vetPhone:    foundation.vetPhone    ?? '',
+      references:  foundation.references  ?? '',
+      legalId:       foundation.legalId       ?? '',
+      donationClabe: foundation.donationClabe ?? '',
     });
     setErrors({});
     setApiError(null);
@@ -89,6 +108,14 @@ export default function EditFoundationModal({ foundation, onClose, onSaved }: Pr
         whatsapp:    form.whatsapp.trim()    || null,
         website:     form.website.trim()     || null,
         responsible: form.responsible.trim() || null,
+        instagram:   form.instagram.trim()   || null,
+        facebook:    form.facebook.trim()    || null,
+        schedule:    form.schedule.trim()    || null,
+        vet_name:    form.vetName.trim()     || null,
+        vet_phone:   form.vetPhone.trim()    || null,
+        references:  form.references.trim()  || null,
+        legal_id:       form.legalId.trim()       || null,
+        donation_clabe: form.donationClabe.trim()  || null,
       });
       onSaved(updated);
       onClose();
@@ -234,6 +261,77 @@ export default function EditFoundationModal({ foundation, onClose, onSaved }: Pr
           value={form.description}
           onChange={set('description')}
         />
+
+        {/* ── Redes sociales ── */}
+        <div className="form-section-label">🌐 Redes sociales</div>
+        <div className="form-row">
+          <FormField
+            label="Instagram"
+            name="instagram"
+            placeholder="@mirefugio o URL"
+            value={form.instagram}
+            onChange={set('instagram')}
+          />
+          <FormField
+            label="Facebook"
+            name="facebook"
+            placeholder="facebook.com/mirefugio"
+            value={form.facebook}
+            onChange={set('facebook')}
+          />
+        </div>
+
+        {/* ── Operación ── */}
+        <div className="form-section-label">⚙️ Operación</div>
+        <FormField
+          label="Horario de atención"
+          name="schedule"
+          placeholder="Lun–Vie 10:00-18:00"
+          value={form.schedule}
+          onChange={set('schedule')}
+        />
+        <div className="form-row">
+          <FormField
+            label="Nombre del veterinario"
+            name="vetName"
+            value={form.vetName}
+            onChange={set('vetName')}
+          />
+          <FormField
+            label="Teléfono del veterinario"
+            name="vetPhone"
+            type="tel"
+            value={form.vetPhone}
+            onChange={set('vetPhone')}
+          />
+        </div>
+        <FormField
+          variant="textarea"
+          label="Referencias"
+          name="references"
+          rows={2}
+          hint="Personas o instituciones que avalan al refugio"
+          value={form.references}
+          onChange={set('references')}
+        />
+
+        {/* ── Legal ── */}
+        <div className="form-section-label">⚖️ Legal</div>
+        <div className="form-row">
+          <FormField
+            label="RFC / Registro legal"
+            name="legalId"
+            value={form.legalId}
+            onChange={set('legalId')}
+          />
+          <FormField
+            label="CLABE para donaciones"
+            name="donationClabe"
+            placeholder="18 dígitos"
+            value={form.donationClabe}
+            onChange={set('donationClabe')}
+          />
+        </div>
       </div>
 
       <div className="admin-modal-footer">

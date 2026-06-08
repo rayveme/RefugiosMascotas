@@ -51,6 +51,11 @@ export function mapFoundation(f: FoundationApi): AuthFoundation {
     // Legal
     legalId:       f.legal_id      ?? null,
     donationClabe: f.donation_clabe ?? null,
+    // Documentos de verificación
+    idFrontUrl:       f.id_front_url       ?? null,
+    actaUrl:          f.acta_url           ?? null,
+    proofAddressUrl:  f.proof_address_url  ?? null,
+    refugePhotosUrls: f.refuge_photos_urls ?? null,
   };
 }
 

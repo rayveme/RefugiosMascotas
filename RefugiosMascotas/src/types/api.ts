@@ -57,6 +57,11 @@ export interface FoundationApi {
   // Legal
   legal_id: string | null;
   donation_clabe: string | null;
+  // Documentos de verificación
+  id_front_url: string | null;
+  acta_url: string | null;
+  proof_address_url: string | null;
+  refuge_photos_urls: string | null;
 }
 
 export interface AdminApi {
