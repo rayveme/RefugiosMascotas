@@ -4,7 +4,7 @@ import FormField from '../../ui/FormField/FormField';
 import { foundationsApi } from '../../../api/foundations';
 import { extractApiError } from '../../../api/client';
 import { useAuth } from '../../../hooks/useAuth';
-import { StepsBar } from '../../auth/AuthModal/FormStepHelpers';
+import { FileZone, StepsBar } from '../../auth/AuthModal/FormStepHelpers';
 
 interface Props {
   open: boolean;
@@ -79,6 +79,11 @@ export default function CompleteFoundationProfileModal({ open, onClose }: Props)
     ref2Name:  '',
     ref2Phone: '',
   });
+  const [docs, setDocs] = useState({
+    facility_photos: [] as File[],
+    legal_doc:       [] as File[],
+  });
+  const [docsErr, setDocsErr] = useState<Record<string, string>>({});
 
   const toggleArr = (arr: string[], val: string) =>
     arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val];
@@ -109,6 +114,13 @@ export default function CompleteFoundationProfileModal({ open, onClose }: Props)
     return !Object.keys(e).length;
   };
 
+  const v4 = () => {
+    const e: Record<string, string> = {};
+    if (!docs.facility_photos.length) e.facility_photos = 'Sube al menos una foto de tus instalaciones';
+    setDocsErr(e);
+    return !Object.keys(e).length;
+  };
+
   const next = () => {
     if (step === 1 && !v1()) return;
     if (step === 2 && !v2()) return;
@@ -117,6 +129,7 @@ export default function CompleteFoundationProfileModal({ open, onClose }: Props)
   };
 
   const submit = async () => {
+    if (!v4()) return;
     setApiError(null);
     setSubmitting(true);
     try {
@@ -143,26 +156,36 @@ export default function CompleteFoundationProfileModal({ open, onClose }: Props)
       if (legal.ref2Name.trim()) refsLines.push(`${legal.ref2Name.trim()} — ${legal.ref2Phone.trim()}`);
 
       await foundationsApi.updateMe({
-        name:          basic.nombre.trim(),
-        city:          loc.ciudad.trim(),
-        description:   description || undefined,
-        phone:         contact.telefono.trim() || null,
-        years: years ?? undefined,
-        address:       fullAddress || null,
-        state:         loc.estado || null,
-        postal_code:   loc.cp || null,
-        whatsapp:      contact.whatsapp.trim()   || null,
-        website:       contact.sitio.trim()       || null,
-        responsible:   contact.responsable.trim() || null,
-        instagram:     contact.instagram.trim()   || null,
-        facebook:      contact.facebook.trim()    || null,
-        schedule:      legal.schedule.trim()      || null,
-        references:    refsLines.join('\n')       || null,
-        vet_name:      legal.vetName.trim()       || null,
-        vet_phone:     legal.vetPhone.trim()      || null,
-        legal_id:      legal.legalId.trim()       || null,
+        name:           basic.nombre.trim(),
+        city:           loc.ciudad.trim(),
+        description:    description || undefined,
+        phone:          contact.telefono.trim()    || null,
+        years:          years ?? undefined,
+        address:        fullAddress                || null,
+        state:          loc.estado                 || null,
+        postal_code:    loc.cp                     || null,
+        whatsapp:       contact.whatsapp.trim()    || null,
+        website:        contact.sitio.trim()       || null,
+        responsible:    contact.responsable.trim() || null,
+        instagram:      contact.instagram.trim()   || null,
+        facebook:       contact.facebook.trim()    || null,
+        schedule:       legal.schedule.trim()      || null,
+        references:     refsLines.join('\n')       || null,
+        vet_name:       legal.vetName.trim()       || null,
+        vet_phone:      legal.vetPhone.trim()      || null,
+        legal_id:       legal.legalId.trim()       || null,
         donation_clabe: legal.donationClabe.trim() || null,
       });
+
+      // Subir documentos
+      try {
+        await foundationsApi.uploadDocuments({
+          refugePhotos: docs.facility_photos.length > 0 ? docs.facility_photos : undefined,
+          acta:         docs.legal_doc[0] ?? null,
+        });
+      } catch {
+        // No bloquea si falla — los datos del perfil ya quedaron guardados.
+      }
 
       await refresh();
       setDone(true);
@@ -474,6 +497,28 @@ export default function CompleteFoundationProfileModal({ open, onClose }: Props)
                     onChange={(e) => setLegal((l) => ({ ...l, ref2Phone: e.target.value }))}
                   />
                 </div>
+
+                <div className="form-section-label">Documentos</div>
+
+                <FileZone
+                  label="Fotos de las instalaciones"
+                  hint="Muestra el espacio donde viven los animales — hasta 6 fotos"
+                  accept="image/*"
+                  multiple
+                  maxFiles={6}
+                  required
+                  files={docs.facility_photos}
+                  onChange={(f) => setDocs((d) => ({ ...d, facility_photos: f }))}
+                  error={docsErr.facility_photos}
+                />
+
+                <FileZone
+                  label="Documentos legales"
+                  hint="Acta constitutiva, RFC o registro oficial — opcional pero recomendado"
+                  accept="image/*,.pdf"
+                  files={docs.legal_doc}
+                  onChange={(f) => setDocs((d) => ({ ...d, legal_doc: f }))}
+                />
 
                 <div className="form-info-box">
                   🔒 Esta información es confidencial y solo la revisa el administrador para validar tu solicitud.
