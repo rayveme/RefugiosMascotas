@@ -156,7 +156,7 @@
 
 .refugio-stat__label {
   font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.85);
   letter-spacing: 0.05em;
 }
 
@@ -215,7 +215,7 @@
 }
 .refugios-empty-state__sub {
   font-size: 0.9rem;
-  color: rgba(250, 243, 228, 0.6);
+  color: rgba(250, 243, 228, 0.88);
 }
 
 .refugio-card--skeleton {
