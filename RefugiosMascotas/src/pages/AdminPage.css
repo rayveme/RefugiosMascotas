@@ -32,7 +32,7 @@
   font-family: inherit;
   font-size: 0.88rem;
   font-weight: 600;
-  color: var(--text-muted);
+  color: #6b7280;
   cursor: pointer;
   transition: color 0.18s ease, border-color 0.18s ease;
   display: inline-flex;
@@ -41,10 +41,10 @@
   margin-bottom: -1px;
 }
 
-.admin-tab:hover { color: var(--forest-deep); }
+.admin-tab:hover { color: #111827; }
 
 .admin-tab--active {
-  color: var(--forest-deep);
+  color: #111827;
   border-bottom-color: var(--amber);
 }
 
@@ -110,43 +110,56 @@
 /* Botón "Ver detalles" */
 .admin-row__toggle {
   width: 100%;
-  padding: 8px 20px;
-  background: var(--cream);
+  padding: 9px 20px;
+  background: #f9fafb;
   border: none;
-  border-top: 1px solid var(--cream-dark);
+  border-top: 1px solid #e5e7eb;
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: var(--text-mid);
+  color: #374151;
   cursor: pointer;
   text-align: left;
   transition: background 0.15s ease, color 0.15s ease;
 }
 .admin-row__toggle:hover {
-  background: var(--cream-dark);
-  color: var(--forest-deep);
+  background: #f3f4f6;
+  color: #111827;
 }
 
 /* Panel de detalles expandido */
 .admin-detail-panel {
-  padding: 16px 20px;
-  background: var(--cream);
-  border-top: 1px solid var(--cream-dark);
+  padding: 20px;
+  background: #f3f4f6;
+  border-top: 1px solid #e5e7eb;
 }
 
 .admin-detail-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+/* Cada sección es una tarjeta blanca */
+.admin-detail-section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px 18px;
 }
 
 .admin-detail-section__title {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-muted);
-  margin: 0 0 10px;
+  color: #6b7280;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1.5px solid #f3f4f6;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .admin-detail-list {
@@ -155,34 +168,34 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
 
 .admin-detail-list li {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   font-size: 0.82rem;
 }
 
 .admin-detail-list li span:first-child {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  font-weight: 600;
+  font-size: 0.68rem;
+  color: #9ca3af;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 
 .admin-detail-list li strong,
 .admin-detail-list li a {
-  color: var(--forest-deep);
+  color: #111827;
   font-weight: 600;
-  font-size: 0.86rem;
-  word-break: break-all;
+  font-size: 0.88rem;
+  word-break: break-word;
 }
 
 .admin-detail-list li a {
-  color: var(--forest);
+  color: #2563eb;
   text-decoration: none;
 }
 .admin-detail-list li a:hover {
@@ -193,10 +206,10 @@
   flex-direction: column !important;
 }
 .admin-detail-list__full p {
-  margin: 4px 0 0;
-  font-size: 0.84rem;
-  color: var(--text-mid);
-  line-height: 1.5;
+  margin: 3px 0 0;
+  font-size: 0.85rem;
+  color: #374151;
+  line-height: 1.6;
   white-space: pre-wrap;
 }
 
@@ -276,7 +289,7 @@
 
 .admin-row__meta {
   font-size: 0.82rem;
-  color: var(--text-muted);
+  color: #6b7280;
 }
 
 .admin-row__desc {
@@ -378,6 +391,30 @@
 /* ── Sección que ocupa todo el ancho del grid de detalles ────────────────── */
 .admin-detail-section--full {
   grid-column: 1 / -1;
+}
+
+/* ── Chips informativos dentro del panel de detalles ────────────────────── */
+.admin-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.admin-chip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Sección docs dentro del panel comparte el fondo gris (sin tarjeta blanca extra) */
+.admin-detail-section--full.admin-detail-section {
+  background: #fff;
 }
 
 /* ── Tarjetas de documentos ──────────────────────────────────────────────── */

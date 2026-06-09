@@ -9,10 +9,33 @@ import EditFoundationModal from '../components/admin/EditFoundationModal';
 import EditAdopterModal from '../components/admin/EditAdopterModal';
 import './AdminPage.css';
 
+/** Parsea la descripción concatenada por el formulario de registro.
+ *  Separa el texto libre de los metadatos estructurados (Tipo, Animales, Servicios, Capacidad). */
+function parseDescription(raw: string | null) {
+  if (!raw) return { text: null, tipo: null, animales: [], servicios: [], capacidad: null };
+  const META_KEYS = ['Tipo:', 'Animales:', 'Servicios:', 'Capacidad:'];
+  const lines = raw.split('\n');
+  const textLines: string[] = [];
+  let tipo: string | null = null;
+  let animales: string[] = [];
+  let servicios: string[] = [];
+  let capacidad: string | null = null;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('Tipo:'))      { tipo      = trimmed.replace('Tipo:', '').trim(); }
+    else if (trimmed.startsWith('Animales:'))   { animales  = trimmed.replace('Animales:', '').split(',').map(s => s.trim()).filter(Boolean); }
+    else if (trimmed.startsWith('Servicios:'))  { servicios = trimmed.replace('Servicios:', '').split(',').map(s => s.trim()).filter(Boolean); }
+    else if (trimmed.startsWith('Capacidad:'))  { capacidad = trimmed.replace('Capacidad:', '').trim(); }
+    else if (!META_KEYS.some(k => trimmed.startsWith(k))) { textLines.push(line); }
+  }
+  return { text: textLines.join('\n').trim() || null, tipo, animales, servicios, capacidad };
+}
+
 /** Fila expandible con el detalle completo de una fundación */
 function FoundationDetailRow({ f }: { f: AuthFoundation }) {
   const [open, setOpen] = useState(false);
 
+  const parsed    = parseDescription(f.description);
   const hasLocation = f.address || f.state || f.postalCode;
   const hasSocial   = f.instagram || f.facebook || f.website;
   const hasOps      = f.schedule || f.vetName || f.vetPhone || f.references;
@@ -57,10 +80,28 @@ function FoundationDetailRow({ f }: { f: AuthFoundation }) {
               <h4 className="admin-detail-section__title">🏠 Sobre el refugio</h4>
               <ul className="admin-detail-list">
                 <li><span>Años de operación</span><strong>{f.years} año{f.years !== 1 ? 's' : ''}</strong></li>
-                {f.description && (
+                {parsed.tipo      && <li><span>Tipo de organización</span><strong>{parsed.tipo}</strong></li>}
+                {parsed.capacidad && <li><span>Capacidad</span><strong>{parsed.capacidad}</strong></li>}
+                {parsed.animales.length > 0 && (
+                  <li className="admin-detail-list__full">
+                    <span>Animales que atienden</span>
+                    <div className="admin-chips">
+                      {parsed.animales.map(a => <span key={a} className="admin-chip">{a}</span>)}
+                    </div>
+                  </li>
+                )}
+                {parsed.servicios.length > 0 && (
+                  <li className="admin-detail-list__full">
+                    <span>Servicios</span>
+                    <div className="admin-chips">
+                      {parsed.servicios.map(s => <span key={s} className="admin-chip">{s}</span>)}
+                    </div>
+                  </li>
+                )}
+                {parsed.text && (
                   <li className="admin-detail-list__full">
                     <span>Descripción</span>
-                    <p style={{ whiteSpace: 'pre-line' }}>{f.description}</p>
+                    <p>{parsed.text}</p>
                   </li>
                 )}
               </ul>
@@ -420,7 +461,9 @@ export default function AdminPage() {
                       <span className="admin-row__meta">📍 {f.city}{f.state ? `, ${f.state}` : ''} · {f.email}</span>
                       {f.phone && <span className="admin-row__meta">📞 {f.phone}{f.whatsapp ? ` · WhatsApp: ${f.whatsapp}` : ''}</span>}
                       {f.responsible && <span className="admin-row__meta">👤 Responsable: {f.responsible}</span>}
-                      {f.description && <p className="admin-row__desc">"{f.description}"</p>}
+                      {parseDescription(f.description).text && (
+                        <p className="admin-row__desc">"{parseDescription(f.description).text}"</p>
+                      )}
                     </div>
                     <div className="admin-row__actions">
                       <button
