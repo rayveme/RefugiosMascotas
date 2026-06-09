@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient, uploadClient } from './client';
 import { mapAdopter } from './mappers';
 import type { AdopterApi } from '../types/api';
 import type { AuthAdopter } from '../types';
@@ -71,6 +71,6 @@ export const adoptersApi = {
     if (params.adoption_reason)       form.append('adoption_reason', params.adoption_reason);
 
     // axios pone el Content-Type correcto (multipart/form-data) automáticamente
-    await apiClient.post('/adopters/me/documents', form);
+    await uploadClient.post('/adopters/me/documents', form);
   },
 };

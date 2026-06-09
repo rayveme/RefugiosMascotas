@@ -12,24 +12,35 @@ export const apiClient: AxiosInstance = axios.create({
   timeout: 15_000,
 });
 
-apiClient.interceptors.request.use((config) => {
-  const token = authStorage.getToken();
-  if (token) {
-    config.headers.set('Authorization', `Bearer ${token}`);
-  }
-  return config;
+// Cliente con timeout extendido para uploads de archivos desde redes móviles lentas.
+export const uploadClient: AxiosInstance = axios.create({
+  baseURL,
+  timeout: 120_000,  // 2 minutos
 });
 
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error: AxiosError<{ detail?: string }>) => {
-    if (error.response?.status === 401) {
-      authStorage.clear();
-      authCallbacks.triggerUnauthorized();
+function attachAuthInterceptors(instance: AxiosInstance) {
+  instance.interceptors.request.use((config) => {
+    const token = authStorage.getToken();
+    if (token) {
+      config.headers.set('Authorization', `Bearer ${token}`);
     }
-    return Promise.reject(error);
-  },
-);
+    return config;
+  });
+
+  instance.interceptors.response.use(
+    (response) => response,
+    (error: AxiosError<{ detail?: string }>) => {
+      if (error.response?.status === 401) {
+        authStorage.clear();
+        authCallbacks.triggerUnauthorized();
+      }
+      return Promise.reject(error);
+    },
+  );
+}
+
+attachAuthInterceptors(apiClient);
+attachAuthInterceptors(uploadClient);
 
 export function extractApiError(err: unknown, fallback = 'Algo salió mal'): string {
   if (axios.isAxiosError<{ detail?: unknown }>(err)) {

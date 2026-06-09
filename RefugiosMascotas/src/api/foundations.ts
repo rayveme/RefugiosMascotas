@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient, uploadClient } from './client';
 import { mapFoundation, mapFoundationToRefugio } from './mappers';
 import type { FoundationApi } from '../types/api';
 import type { AuthFoundation, Refugio } from '../types';
@@ -34,7 +34,7 @@ export const foundationsApi = {
     if (params.acta)         form.append('acta',          params.acta);
     if (params.proofAddress) form.append('proof_address', params.proofAddress);
     (params.refugePhotos ?? []).forEach(f => form.append('refuge_photos', f));
-    const { data } = await apiClient.post<FoundationApi>('/foundations/me/documents', form);
+    const { data } = await uploadClient.post<FoundationApi>('/foundations/me/documents', form);
     return mapFoundation(data);
   },
   async updateMe(payload: Partial<{

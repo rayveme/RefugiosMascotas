@@ -4,22 +4,15 @@ from app.cloudinary_client import upload_document
 from app.config import get_settings
 from app.deps import CurrentAdopter, SessionDep
 from app.schemas.adopter import AdopterRead, AdopterUpdate
+from app.upload_utils import DOC_MIME, IMAGE_MIME, MAX_DOC_BYTES, resolve_mime
 
 router = APIRouter(prefix="/adopters", tags=["adopters"])
 settings = get_settings()
-
-# Límites para documentos (más generosos que las fotos de mascotas)
-MAX_DOC_BYTES = 10 * 1024 * 1024          # 10 MB
-ALLOWED_IMG_MIME  = {"image/jpeg", "image/png", "image/webp"}
-ALLOWED_DOC_MIME  = {"image/jpeg", "image/png", "image/webp", "application/pdf"}
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def _docs_folder() -> str:
-    """Carpeta de Cloudinary para documentos de adoptantes.
-    Si el folder de mascotas es "huella/pets", los docs van en "huella/documents".
-    """
     base = settings.cloudinary_folder.rsplit("/", 1)[0]
     return f"{base}/documents"
 
@@ -29,14 +22,7 @@ async def _upload_file(
     folder: str,
     allowed_mime: set[str],
 ) -> str:
-    """Valida y sube un archivo a Cloudinary. Devuelve la `secure_url`."""
-    if file.content_type not in allowed_mime:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            f"Tipo de archivo no permitido: {file.content_type}. "
-            f"Acepta: {', '.join(sorted(allowed_mime))}",
-        )
-    content = await file.read()
+    content, _mime = await resolve_mime(file, allowed_mime)
     if len(content) > MAX_DOC_BYTES:
         raise HTTPException(
             status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
@@ -111,19 +97,19 @@ async def upload_my_documents(
     # Cada upload se intenta de forma independiente; un fallo no revierte los demás.
     if id_front and id_front.filename:
         try:
-            adopter.id_front_url = await _upload_file(id_front, folder, ALLOWED_DOC_MIME)
+            adopter.id_front_url = await _upload_file(id_front, folder, DOC_MIME)
         except Exception:
             pass
 
     if id_back and id_back.filename:
         try:
-            adopter.id_back_url = await _upload_file(id_back, folder, ALLOWED_DOC_MIME)
+            adopter.id_back_url = await _upload_file(id_back, folder, DOC_MIME)
         except Exception:
             pass
 
     if proof_address and proof_address.filename:
         try:
-            adopter.proof_address_url = await _upload_file(proof_address, folder, ALLOWED_DOC_MIME)
+            adopter.proof_address_url = await _upload_file(proof_address, folder, DOC_MIME)
         except Exception:
             pass
 
@@ -132,7 +118,7 @@ async def upload_my_documents(
         for photo in home_photos[:4]:
             if photo.filename:
                 try:
-                    url = await _upload_file(photo, folder, ALLOWED_IMG_MIME)
+                    url = await _upload_file(photo, folder, IMAGE_MIME)
                     urls.append(url)
                 except Exception:
                     pass
@@ -141,7 +127,7 @@ async def upload_my_documents(
 
     if signature and signature.filename:
         try:
-            adopter.signature_url = await _upload_file(signature, folder, ALLOWED_IMG_MIME)
+            adopter.signature_url = await _upload_file(signature, folder, IMAGE_MIME)
         except Exception:
             pass
 

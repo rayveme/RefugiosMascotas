@@ -6,13 +6,10 @@ from app.config import get_settings
 from app.deps import CurrentFoundation, SessionDep
 from app.models import Foundation, FoundationStatus, Pet
 from app.schemas.foundation import FoundationRead, FoundationUpdate
+from app.upload_utils import DOC_MIME, IMAGE_MIME, MAX_DOC_BYTES, resolve_mime
 
 router = APIRouter(prefix="/foundations", tags=["foundations"])
 settings = get_settings()
-
-MAX_DOC_BYTES    = 10 * 1024 * 1024
-ALLOWED_IMG_MIME = {"image/jpeg", "image/png", "image/webp"}
-ALLOWED_DOC_MIME = {"image/jpeg", "image/png", "image/webp", "application/pdf"}
 
 
 def _foundation_docs_folder() -> str:
@@ -21,13 +18,7 @@ def _foundation_docs_folder() -> str:
 
 
 async def _upload_file(file: UploadFile, folder: str, allowed_mime: set[str]) -> str:
-    if file.content_type not in allowed_mime:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            f"Tipo de archivo no permitido: {file.content_type}. "
-            f"Acepta: {', '.join(sorted(allowed_mime))}",
-        )
-    content = await file.read()
+    content, _mime = await resolve_mime(file, allowed_mime)
     if len(content) > MAX_DOC_BYTES:
         raise HTTPException(
             status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
@@ -113,15 +104,15 @@ async def upload_my_documents(
     folder = _foundation_docs_folder()
 
     if id_front:
-        foundation.id_front_url = await _upload_file(id_front, folder, ALLOWED_DOC_MIME)
+        foundation.id_front_url = await _upload_file(id_front, folder, DOC_MIME)
     if acta:
-        foundation.acta_url = await _upload_file(acta, folder, ALLOWED_DOC_MIME)
+        foundation.acta_url = await _upload_file(acta, folder, DOC_MIME)
     if proof_address:
-        foundation.proof_address_url = await _upload_file(proof_address, folder, ALLOWED_DOC_MIME)
+        foundation.proof_address_url = await _upload_file(proof_address, folder, DOC_MIME)
     if refuge_photos:
         urls: list[str] = []
         for photo in refuge_photos[:3]:
-            url = await _upload_file(photo, folder, ALLOWED_IMG_MIME)
+            url = await _upload_file(photo, folder, IMAGE_MIME)
             urls.append(url)
         if urls:
             foundation.refuge_photos_urls = ",".join(urls)

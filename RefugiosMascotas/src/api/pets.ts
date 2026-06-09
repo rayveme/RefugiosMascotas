@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient, uploadClient } from './client';
 import { mapPet } from './mappers';
 import type { PetApi, PetCreatePayload } from '../types/api';
 import type { Pet } from '../types';
@@ -37,7 +37,7 @@ export const petsApi = {
     const form = new FormData();
     form.append('file', file);
     // No seteamos Content-Type — axios genera "multipart/form-data; boundary=..." solo.
-    const { data } = await apiClient.post<PetApi>(`/pets/${id}/image`, form);
+    const { data } = await uploadClient.post<PetApi>(`/pets/${id}/image`, form);
     return mapPet(data);
   },
   async deleteImage(id: number): Promise<Pet> {
