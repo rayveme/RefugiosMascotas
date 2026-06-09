@@ -26,6 +26,10 @@ import FoundationDetailPage from "./pages/FoundationDetailPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import RequestsPage from "./pages/RequestsPage";
 import AdminPage from "./pages/AdminPage";
+import PrivacidadPage from "./pages/PrivacidadPage";
+import TerminosPage from "./pages/TerminosPage";
+import CookiesPage from "./pages/CookiesPage";
+import ContactoPage from "./pages/ContactoPage";
 
 import { AuthProvider } from "./context/AuthContext";
 import { useAuth } from "./hooks/useAuth";
@@ -254,6 +258,10 @@ export default function App() {
           <Route path="/registrar-refugio" element={<RegistroRefugio />} />
           <Route path="/dashboard" element={<DashboardRefugio />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/privacidad" element={<PrivacidadPage />} />
+          <Route path="/terminos" element={<TerminosPage />} />
+          <Route path="/cookies" element={<CookiesPage />} />
+          <Route path="/contacto" element={<ContactoPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

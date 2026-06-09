@@ -14,10 +14,10 @@ const shelterLinks = [
 ];
 
 const legalLinks = [
-  { label: "Privacidad",     href: "#" },
-  { label: "Términos de uso",href: "#" },
-  { label: "Cookies",        href: "#" },
-  { label: "Contacto",       href: "#" },
+  { label: "Privacidad",      href: "/privacidad" },
+  { label: "Términos de uso", href: "/terminos"   },
+  { label: "Cookies",         href: "/cookies"    },
+  { label: "Contacto",        href: "/contacto"   },
 ];
 
 export default function Footer() {
@@ -71,7 +71,7 @@ export default function Footer() {
             <ul className="footer__links">
               {legalLinks.map(({ label, href }) => (
                 <li key={label}>
-                  <a href={href}>{label}</a>
+                  <Link to={href}>{label}</Link>
                 </li>
               ))}
             </ul>
