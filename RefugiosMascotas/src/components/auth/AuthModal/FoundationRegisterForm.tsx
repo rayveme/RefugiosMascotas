@@ -2,6 +2,7 @@ import { useState } from 'react';
 import FormField from '../../ui/FormField/FormField';
 import { extractApiError } from '../../../api/client';
 import { useAuth } from '../../../hooks/useAuth';
+import { foundationsApi } from '../../../api/foundations';
 import { FileZone, StepsBar } from './FormStepHelpers';
 
 interface Props { onSuccess: () => void; }
@@ -91,6 +92,7 @@ export default function FoundationRegisterForm({ onSuccess }: Props) {
     setApiError(null);
     setSubmitting(true);
     try {
+      // 1 — Crear la cuenta (guarda token en authStorage)
       await registerFoundation({
         email:       basics.email.trim(),
         password:    basics.password,
@@ -100,6 +102,20 @@ export default function FoundationRegisterForm({ onSuccess }: Props) {
         description: details.description.trim() || undefined,
         years:       Number.parseInt(details.years, 10) || 0,
       });
+
+      // 2 — Subir documentos (no bloquea el registro si falla)
+      const hasFiles = docs.facility_photos.length > 0 || docs.legal_doc.length > 0;
+      if (hasFiles) {
+        try {
+          await foundationsApi.uploadDocuments({
+            refugePhotos: docs.facility_photos.length > 0 ? docs.facility_photos : undefined,
+            acta:         docs.legal_doc[0] ?? null,
+          });
+        } catch {
+          // La cuenta fue creada; los documentos se pueden subir más adelante.
+        }
+      }
+
       onSuccess();
     } catch (err) {
       setApiError(extractApiError(err, 'No pudimos registrar tu refugio'));

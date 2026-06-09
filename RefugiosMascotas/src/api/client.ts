@@ -9,7 +9,7 @@ const baseURL = import.meta.env.VITE_API_URL
 // Forzarlo aquí rompía los uploads de imagen.
 export const apiClient: AxiosInstance = axios.create({
   baseURL,
-  timeout: 15_000,
+  timeout: 30_000,  // 30s — cubre cold starts de Railway
 });
 
 // Cliente con timeout extendido para uploads de archivos desde redes móviles lentas.
