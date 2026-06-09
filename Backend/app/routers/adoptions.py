@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import select
 
 from app.cloudinary_client import build_image_url
-from app.deps import ApprovedFoundation, CompleteAdopter, SessionDep
+from app.deps import ApprovedFoundation, CompleteAdopter, CurrentAdopter, SessionDep
 from app.models import AdoptionRequest, AdoptionStatus, Pet
 from app.schemas.adoption_request import AdoptionRequestCreate, AdoptionRequestRead
 
@@ -72,7 +72,7 @@ async def request_adoption(
     summary="Solicitudes que el adopter actual ha enviado",
 )
 async def list_my_requests(
-    adopter: CompleteAdopter,
+    adopter: CurrentAdopter,
     session: SessionDep,
     status_filter: AdoptionStatus | None = Query(None, alias="status"),
 ) -> list[AdoptionRequestRead]:
