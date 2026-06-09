@@ -521,6 +521,25 @@
   color: var(--accent);
 }
 
+.rd-card-urgent {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(220, 38, 38, 0.85);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.rd-tag--urgent {
+  background: rgba(220, 38, 38, 0.2);
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
 /* Card actions overlay */
 .rd-card-actions-overlay {
   position: absolute;

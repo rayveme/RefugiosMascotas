@@ -1,57 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
+import { petsApi } from '../../api/pets';
+import { extractApiError } from '../../api/client';
+import { notify } from '../../services/notify.service';
+import type { Pet } from '../../types';
+import type { ShellContext } from '../../types/shell';
 import './Dashboardrefugio.css';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-type Status = 'Disponible' | 'En proceso';
-
-interface Mascota {
-  id: number;
-  nombre: string;
-  especie: string;
-  edad: string;
-  descripcion: string;
-  foto: string;
-  tags: string[];
-  status: Status;
-}
-
-// ─── Data ─────────────────────────────────────────────────────────────────────
-const MASCOTAS_INICIALES: Mascota[] = [
-  {
-    id: 1,
-    nombre: 'Luna',
-    especie: 'Perro',
-    edad: '2 años',
-    descripcion: 'Una compañera incansable que ama las caminatas largas y dormir a tus pies.',
-    foto: 'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?q=80&w=600&h=700&auto=format&fit=crop',
-    tags: ['Leal', 'Energética'],
-    status: 'Disponible',
-  },
-  {
-    id: 2,
-    nombre: 'Bigotes',
-    especie: 'Gato',
-    edad: '4 meses',
-    descripcion: 'Experto en cazar sombras y ronronear apenas siente un toque humano.',
-    foto: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=600&h=700&auto=format&fit=crop',
-    tags: ['Curioso', 'Tierno'],
-    status: 'En proceso',
-  },
-  {
-    id: 3,
-    nombre: 'Milo',
-    especie: 'Perro',
-    edad: '5 años',
-    descripcion: 'El alma de la fiesta. Se lleva bien con niños y otros perros.',
-    foto: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?q=80&w=600&h=700&auto=format&fit=crop',
-    tags: ['Social', 'Noble'],
-    status: 'Disponible',
-  },
-];
-
-const FILTERS = ['Todos', 'Disponible', 'En proceso'] as const;
-type Filter = typeof FILTERS[number];
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const IconBack = () => (
@@ -93,196 +49,60 @@ const IconArrow = () => (
   </svg>
 );
 
-// ─── Modal ────────────────────────────────────────────────────────────────────
-interface ModalProps {
-  abierto: boolean;
-  onCerrar: () => void;
-  onGuardar: (m: Mascota) => void;
-}
-
-function ModalAgregar({ abierto, onCerrar, onGuardar }: ModalProps) {
-  const [form, setForm] = useState({
-    nombre: '', especie: '', edad: '', descripcion: '',
-    foto: '', tagsStr: '', status: 'Disponible' as Status,
-  });
-  const [errores, setErrores] = useState<Record<string, string>>({});
-
-  const set = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
-
-  const validar = () => {
-    const e: Record<string, string> = {};
-    if (!form.nombre.trim()) e.nombre = 'El nombre es requerido';
-    if (!form.especie)       e.especie = 'Selecciona una especie';
-    setErrores(e);
-    return !Object.keys(e).length;
-  };
-
-  const handleGuardar = () => {
-    if (!validar()) return;
-    onGuardar({
-      id: Date.now(),
-      nombre:      form.nombre.trim(),
-      especie:     form.especie,
-      edad:        form.edad.trim(),
-      descripcion: form.descripcion.trim(),
-      foto:        form.foto.trim(),
-      tags:        form.tagsStr.split(',').map(t => t.trim()).filter(Boolean),
-      status:      form.status,
-    });
-    setForm({ nombre: '', especie: '', edad: '', descripcion: '', foto: '', tagsStr: '', status: 'Disponible' });
-    setErrores({});
-    onCerrar();
-  };
-
-  if (!abierto) return null;
-
-  const previewOk = form.foto.trim().startsWith('http');
-
-  return (
-    <div className="rd-modal-overlay" onClick={onCerrar}>
-      <div className="rd-modal" onClick={e => e.stopPropagation()}>
-
-        <div className="rd-modal__header">
-          <div className="rd-modal__title-group">
-            <span className="rd-modal__eyebrow">Registro</span>
-            <h2 className="rd-modal__title">Nueva mascota</h2>
-          </div>
-          <button className="rd-modal__close" onClick={onCerrar} aria-label="Cerrar">✕</button>
-        </div>
-
-        {/* Sección 1: Identidad */}
-        <div className="rd-modal-section">
-          <span className="rd-modal-section-label">Identidad</span>
-
-          <div className="rd-field">
-            <label className="rd-field__label">Nombre *</label>
-            <input className="rd-input" placeholder="Ej. Luna"
-              value={form.nombre} onChange={e => set('nombre', e.target.value)} />
-            {errores.nombre && <span className="rd-field__error">{errores.nombre}</span>}
-          </div>
-
-          <div className="rd-row2">
-            <div className="rd-field">
-              <label className="rd-field__label">Especie *</label>
-              <select className="rd-input rd-select" value={form.especie}
-                onChange={e => set('especie', e.target.value)}>
-                <option value="">Seleccionar…</option>
-                <option value="Perro">Perro</option>
-                <option value="Gato">Gato</option>
-                <option value="Conejo">Conejo</option>
-                <option value="Ave">Ave</option>
-                <option value="Reptil">Reptil</option>
-                <option value="Otro">Otro</option>
-              </select>
-              {errores.especie && <span className="rd-field__error">{errores.especie}</span>}
-            </div>
-
-            <div className="rd-field">
-              <label className="rd-field__label">Edad</label>
-              <input className="rd-input" placeholder="Ej. 2 años"
-                value={form.edad} onChange={e => set('edad', e.target.value)} />
-            </div>
-          </div>
-
-          <div className="rd-field">
-            <label className="rd-field__label">Estado</label>
-            <select className="rd-input rd-select" value={form.status}
-              onChange={e => set('status', e.target.value as Status)}>
-              <option value="Disponible">Disponible</option>
-              <option value="En proceso">En proceso</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Sección 2: Descripción */}
-        <div className="rd-modal-section">
-          <span className="rd-modal-section-label">Descripción</span>
-
-          <div className="rd-field">
-            <label className="rd-field__label">Personalidad / Historia</label>
-            <textarea className="rd-input rd-textarea"
-              placeholder="Personalidad, cuidados especiales, historia de rescate…"
-              value={form.descripcion} onChange={e => set('descripcion', e.target.value)} />
-          </div>
-
-          <div className="rd-field">
-            <label className="rd-field__label">Tags (separados por coma)</label>
-            <input className="rd-input" placeholder="Ej. Cariñoso, Juguetón, Vacunado"
-              value={form.tagsStr} onChange={e => set('tagsStr', e.target.value)} />
-          </div>
-        </div>
-
-        {/* Sección 3: Foto */}
-        <div className="rd-modal-section">
-          <span className="rd-modal-section-label">Foto</span>
-
-          <div className="rd-img-preview">
-            {previewOk
-              ? <img src={form.foto} alt="Preview" onError={e => { (e.target as HTMLImageElement).style.display='none'; }} />
-              : '🐾'
-            }
-          </div>
-
-          <div className="rd-field">
-            <label className="rd-field__label">URL de la imagen</label>
-            <input className="rd-input" placeholder="https://..."
-              value={form.foto} onChange={e => set('foto', e.target.value)} />
-          </div>
-        </div>
-
-        <div className="rd-modal__actions">
-          <button className="rd-btn-secondary" onClick={onCerrar}>Cancelar</button>
-          <button className="rd-btn-primary" onClick={handleGuardar}>
-            <IconPlus /> Agregar mascota
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Pet Card ─────────────────────────────────────────────────────────────────
-function PetCard({ mascota, onDelete }: { mascota: Mascota; onDelete: (id: number) => void }) {
+function PetCard({ pet, onDelete }: { pet: Pet; onDelete: (id: number) => void }) {
+  const statusLabel = pet.isAdopted ? 'Adoptado' : 'Disponible';
+  const statusMod   = pet.isAdopted ? 'pending' : 'available';
+
   return (
     <article className="rd-profile-card">
       <div className="rd-card-image">
-        {mascota.foto
-          ? <img src={mascota.foto} alt={mascota.nombre} loading="lazy" />
+        {pet.imageUrl
+          ? <img src={pet.imageUrl} alt={pet.name} loading="lazy" />
           : <div className="rd-img-placeholder">🐾</div>
         }
         <div className="rd-card-gradient" />
 
-        <div className={`rd-card-status rd-card-status--${mascota.status === 'Disponible' ? 'available' : 'pending'}`}>
-          {mascota.status}
+        <div className={`rd-card-status rd-card-status--${statusMod}`}>
+          {statusLabel}
         </div>
 
+        {pet.urgent && (
+          <div className="rd-card-urgent">⚡ Urgente</div>
+        )}
+
         <div className="rd-card-actions-overlay">
-          <button className="rd-icon-btn" title="Editar" aria-label="Editar">
+          <button className="rd-icon-btn" title="Editar" aria-label="Editar" disabled>
             <IconEdit />
           </button>
-          <button className="rd-icon-btn rd-icon-btn--delete" title="Eliminar"
-            aria-label="Eliminar" onClick={() => onDelete(mascota.id)}>
+          <button
+            className="rd-icon-btn rd-icon-btn--delete"
+            title="Eliminar"
+            aria-label="Eliminar"
+            onClick={() => onDelete(pet.id)}
+          >
             <IconDelete />
           </button>
         </div>
 
         <div className="rd-card-overlay">
           <div className="rd-tags">
-            {mascota.tags.map(tag => <span key={tag} className="rd-tag">{tag}</span>)}
+            <span className="rd-tag">{pet.type}</span>
+            {pet.urgent && <span className="rd-tag rd-tag--urgent">Urgente</span>}
           </div>
         </div>
       </div>
 
       <div className="rd-card-body">
         <div className="rd-card-header">
-          <h3 className="rd-card-name">{mascota.nombre}</h3>
-          {mascota.edad && <span className="rd-card-age">{mascota.edad}</span>}
+          <h3 className="rd-card-name">{pet.name}</h3>
+          {pet.age && <span className="rd-card-age">{pet.age}</span>}
         </div>
-        <p className="rd-card-species">{mascota.especie}</p>
-        {mascota.descripcion && <p className="rd-card-desc">{mascota.descripcion}</p>}
+        <p className="rd-card-species">{pet.breed || pet.type}</p>
+        {pet.description && <p className="rd-card-desc">{pet.description}</p>}
         <div className="rd-card-divider" />
-        <button className="rd-btn-adopt">
-          Conocer a {mascota.nombre} <IconArrow />
+        <button className="rd-btn-adopt" disabled>
+          Perfil de adopción <IconArrow />
         </button>
       </div>
     </article>
@@ -290,26 +110,73 @@ function PetCard({ mascota, onDelete }: { mascota: Mascota; onDelete: (id: numbe
 }
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
+const FILTERS = ['Todos', 'Disponible', 'Adoptado'] as const;
+type Filter = typeof FILTERS[number];
+
 export default function DashboardRefugio() {
   const navigate = useNavigate();
-  const [mascotas, setMascotas]     = useState<Mascota[]>(MASCOTAS_INICIALES);
-  const [modalAbierto, setModal]    = useState(false);
-  const [filtro, setFiltro]         = useState<Filter>('Todos');
-  const [busqueda, setBusqueda]     = useState('');
+  const ctx = useOutletContext<ShellContext>();
+  const { user } = useAuth();
 
-  const agregarMascota = (nueva: Mascota) => setMascotas(p => [nueva, ...p]);
-  const eliminarMascota = (id: number)   => setMascotas(p => p.filter(m => m.id !== id));
+  const foundation = user?.role === 'foundation' ? user.profile : null;
+
+  const [pets, setPets]       = useState<Pet[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filtro, setFiltro]   = useState<Filter>('Todos');
+  const [busqueda, setBusqueda] = useState('');
+
+  // Cargar mascotas del refugio desde la API
+  const fetchPets = async () => {
+    if (!foundation) return;
+    setLoading(true);
+    try {
+      const data = await petsApi.list({ foundation_id: foundation.id, include_adopted: true, limit: 200 });
+      setPets(data);
+    } catch (err) {
+      notify.error('Error al cargar mascotas', extractApiError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Recargar cuando PetForm crea una nueva mascota (bumpPets cambia petsRefreshKey)
+  useEffect(() => {
+    fetchPets();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ctx.petsRefreshKey, foundation?.id]);
+
+  const handleDelete = async (id: number) => {
+    const ok = await ctx.confirm({
+      title: 'Eliminar mascota',
+      message: '¿Seguro que quieres eliminar esta mascota? Esta acción no se puede deshacer.',
+      confirmText: 'Eliminar',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    try {
+      await petsApi.remove(id);
+      setPets(p => p.filter(m => m.id !== id));
+      notify.success('Mascota eliminada');
+    } catch (err) {
+      notify.error('No se pudo eliminar', extractApiError(err));
+    }
+  };
 
   const visibles = useMemo(() => {
-    return mascotas
-      .filter(m => filtro === 'Todos' || m.status === filtro)
-      .filter(m => {
+    return pets
+      .filter(p => {
+        if (filtro === 'Disponible') return !p.isAdopted;
+        if (filtro === 'Adoptado')   return  p.isAdopted;
+        return true;
+      })
+      .filter(p => {
         const q = busqueda.toLowerCase();
-        return !q || m.nombre.toLowerCase().includes(q) || m.especie.toLowerCase().includes(q);
+        return !q || p.name.toLowerCase().includes(q) || p.type.toLowerCase().includes(q) || (p.breed ?? '').toLowerCase().includes(q);
       });
-  }, [mascotas, filtro, busqueda]);
+  }, [pets, filtro, busqueda]);
 
-  const disponibles = mascotas.filter(m => m.status === 'Disponible').length;
+  const disponibles = pets.filter(p => !p.isAdopted).length;
+  const adoptados   = pets.filter(p =>  p.isAdopted).length;
 
   return (
     <div className="rd-root">
@@ -326,19 +193,35 @@ export default function DashboardRefugio() {
           </button>
 
           <div className="rd-shelter-info">
-            <div className="rd-avatar-ring" aria-hidden="true">🏠</div>
-            <div className="rd-badge">Refugio Verificado</div>
-            <h1 className="rd-title">Huellitas <em>de Esperanza</em></h1>
-            <span className="rd-location">📍 Ciudad de México, MX</span>
+            {foundation ? (
+              <div
+                className="rd-avatar-ring"
+                aria-hidden="true"
+                style={{ background: `linear-gradient(135deg, ${foundation.gradientFrom}, ${foundation.gradientTo})` }}
+              >
+                {foundation.initial}
+              </div>
+            ) : (
+              <div className="rd-avatar-ring" aria-hidden="true">🏠</div>
+            )}
+            <div className="rd-badge">
+              {foundation?.status === 'approved' ? 'Refugio Verificado' : 'Refugio Pendiente'}
+            </div>
+            <h1 className="rd-title">
+              {foundation ? <>{foundation.name.split(' ')[0]} <em>{foundation.name.split(' ').slice(1).join(' ')}</em></> : 'Mi Refugio'}
+            </h1>
+            <span className="rd-location">
+              📍 {foundation?.city ?? '—'}{foundation?.state ? `, ${foundation.state}` : ''}
+            </span>
           </div>
 
           <div className="rd-stats-bar">
             <div className="rd-stat">
-              <strong>240</strong>
-              <span>Rescatados</span>
+              <strong>{foundation?.years ?? 0}</strong>
+              <span>Años</span>
             </div>
             <div className="rd-stat">
-              <strong>185</strong>
+              <strong>{adoptados}</strong>
               <span>Adoptados</span>
             </div>
             <div className="rd-stat">
@@ -346,7 +229,7 @@ export default function DashboardRefugio() {
               <span>Disponibles</span>
             </div>
             <div className="rd-stat">
-              <strong>{mascotas.length}</strong>
+              <strong>{pets.length}</strong>
               <span>En refugio</span>
             </div>
           </div>
@@ -365,13 +248,13 @@ export default function DashboardRefugio() {
             <IconSearch />
             <input
               className="rd-search"
-              placeholder="Buscar por nombre…"
+              placeholder="Buscar por nombre, especie…"
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}
               aria-label="Buscar mascota"
             />
           </div>
-          <button className="rd-btn-primary" onClick={() => setModal(true)}>
+          <button className="rd-btn-primary" onClick={ctx.openPetForm}>
             <IconPlus /> Registrar mascota
           </button>
         </div>
@@ -388,7 +271,7 @@ export default function DashboardRefugio() {
             {f}
             {f !== 'Todos' && (
               <span style={{ marginLeft: 5, opacity: 0.6 }}>
-                ({mascotas.filter(m => m.status === f).length})
+                ({f === 'Disponible' ? disponibles : adoptados})
               </span>
             )}
           </button>
@@ -397,25 +280,23 @@ export default function DashboardRefugio() {
 
       {/* ── Grid ─────────────────────────────────────────────────────── */}
       <main className="rd-grid">
-        {visibles.length === 0 ? (
+        {loading ? (
+          <div className="rd-empty">
+            <div className="rd-empty-icon">🐾</div>
+            <p>Cargando mascotas…</p>
+          </div>
+        ) : visibles.length === 0 ? (
           <div className="rd-empty">
             <div className="rd-empty-icon">🐾</div>
             <p>{busqueda ? `Sin resultados para "${busqueda}"` : '¡Aún no hay mascotas aquí!'}</p>
             <span>{busqueda ? 'Intenta con otro nombre o especie.' : 'Registra la primera con el botón de arriba.'}</span>
           </div>
         ) : (
-          visibles.map(m => (
-            <PetCard key={m.id} mascota={m} onDelete={eliminarMascota} />
+          visibles.map(p => (
+            <PetCard key={p.id} pet={p} onDelete={handleDelete} />
           ))
         )}
       </main>
-
-      {/* ── Modal ────────────────────────────────────────────────────── */}
-      <ModalAgregar
-        abierto={modalAbierto}
-        onCerrar={() => setModal(false)}
-        onGuardar={agregarMascota}
-      />
     </div>
   );
 }
