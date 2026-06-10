@@ -2,12 +2,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import text
+from sqlalchemy import func, select, text
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_settings
 from app.database import engine
-from app.models import Base
+from app.deps import SessionDep
+from app.models import Base, Foundation, FoundationStatus, Pet
 from app.routers import admin, adopters, adoptions, auth, foundations, pets
 
 settings = get_settings()
@@ -91,3 +92,33 @@ app.include_router(admin.router)
 @app.get("/health", tags=["health"])
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/stats", tags=["public"])
+async def public_stats(session: SessionDep) -> dict[str, int]:
+    """Estadísticas públicas reales para el hero de la página principal."""
+    approved = Foundation.status == FoundationStatus.APPROVED
+
+    foundations_count = await session.scalar(
+        select(func.count(Foundation.id)).where(approved)
+    )
+    available_pets = await session.scalar(
+        select(func.count(Pet.id))
+        .join(Foundation)
+        .where(approved, Pet.is_adopted.is_(False))
+    )
+    adopted_pets = await session.scalar(
+        select(func.count(Pet.id))
+        .join(Foundation)
+        .where(approved, Pet.is_adopted.is_(True))
+    )
+    cities_count = await session.scalar(
+        select(func.count(Foundation.city.distinct())).where(approved)
+    )
+
+    return {
+        "foundations": foundations_count or 0,
+        "available_pets": available_pets or 0,
+        "adopted_pets": adopted_pets or 0,
+        "cities": cities_count or 0,
+    }

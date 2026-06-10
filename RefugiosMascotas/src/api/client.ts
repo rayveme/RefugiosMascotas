@@ -42,6 +42,18 @@ function attachAuthInterceptors(instance: AxiosInstance) {
 attachAuthInterceptors(apiClient);
 attachAuthInterceptors(uploadClient);
 
+export interface PublicStats {
+  foundations:    number;
+  available_pets: number;
+  adopted_pets:   number;
+  cities:         number;
+}
+
+export async function fetchPublicStats(): Promise<PublicStats> {
+  const { data } = await apiClient.get<PublicStats>('/stats');
+  return data;
+}
+
 export function extractApiError(err: unknown, fallback = 'Algo salió mal'): string {
   if (axios.isAxiosError<{ detail?: unknown }>(err)) {
     const detail = err.response?.data?.detail;
