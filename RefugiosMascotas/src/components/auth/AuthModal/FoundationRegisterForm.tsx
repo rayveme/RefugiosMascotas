@@ -2,17 +2,30 @@ import { useState } from 'react';
 import FormField from '../../ui/FormField/FormField';
 import { extractApiError } from '../../../api/client';
 import { useAuth } from '../../../hooks/useAuth';
+import { foundationsApi } from '../../../api/foundations';
 import { FileZone, StepsBar } from './FormStepHelpers';
 
 interface Props { onSuccess: () => void; }
 
-type Step = 1 | 2 | 3;
-const STEPS = ['Datos', 'Detalles', 'Documentos'];
+type Step = 1 | 2 | 3 | 4 | 5;
+const STEPS = ['Cuenta', 'Básico', 'Ubicación', 'Contacto', 'Legal'];
 
-const SERVICES = [
+const ANIMALES  = ['Perros', 'Gatos'];
+const SERVICIOS = [
   'Esterilización', 'Vacunación', 'Microchip',
   'Adopción', 'Foster', 'Rescate', 'Adiestramiento',
 ];
+const ESTADOS = [
+  'Aguascalientes', 'Baja California', 'Baja California Sur', 'Campeche',
+  'Chiapas', 'Chihuahua', 'Ciudad de México', 'Coahuila', 'Colima',
+  'Durango', 'Estado de México', 'Guanajuato', 'Guerrero', 'Hidalgo',
+  'Jalisco', 'Michoacán', 'Morelos', 'Nayarit', 'Nuevo León', 'Oaxaca',
+  'Puebla', 'Querétaro', 'Quintana Roo', 'San Luis Potosí', 'Sinaloa',
+  'Sonora', 'Tabasco', 'Tamaulipas', 'Tlaxcala', 'Veracruz', 'Yucatán', 'Zacatecas',
+];
+
+const toggleArr = (arr: string[], val: string) =>
+  arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val];
 
 export default function FoundationRegisterForm({ onSuccess }: Props) {
   const { registerFoundation } = useAuth();
@@ -20,62 +33,97 @@ export default function FoundationRegisterForm({ onSuccess }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
-  /* ── Paso 1: datos básicos ────────────────────────────────────────────────── */
-  const [basics, setBasics] = useState({ name: '', email: '', password: '' });
-  const [basErr, setBasErr] = useState<Partial<Record<keyof typeof basics, string>>>({});
+  /* ── Paso 1: Credenciales ────────────────────────────────────────────────── */
+  const [creds, setCreds] = useState({ name: '', email: '', password: '' });
+  const [credsErr, setCredsErr] = useState<Partial<Record<keyof typeof creds, string>>>({});
 
-  /* ── Paso 2: detalles del refugio ─────────────────────────────────────────── */
-  const [details, setDetails] = useState({
-    city:        '',
-    phone:       '',
-    years:       '0',
-    org_type:    '',
-    capacity:    '',
-    website:     '',
-    description: '',
-    services:    [] as string[],
+  /* ── Paso 2: Básico ──────────────────────────────────────────────────────── */
+  const [basic, setBasic] = useState({
+    tipo:        '',
+    descripcion: '',
+    anio:        '',
+    capacidad:   '',
+    animales:    [] as string[],
+    servicios:   [] as string[],
   });
-  const [detErr, setDetErr] = useState<Record<string, string>>({});
+  const [basicErr, setBasicErr] = useState<Record<string, string>>({});
 
-  /* ── Paso 3: documentos ───────────────────────────────────────────────────── */
+  /* ── Paso 3: Ubicación ───────────────────────────────────────────────────── */
+  const [loc, setLoc] = useState({
+    calle:   '',
+    colonia: '',
+    ciudad:  '',
+    estado:  '',
+    cp:      '',
+  });
+  const [locErr, setLocErr] = useState<Record<string, string>>({});
+
+  /* ── Paso 4: Contacto ────────────────────────────────────────────────────── */
+  const [contact, setContact] = useState({
+    telefono:    '',
+    whatsapp:    '',
+    sitio:       '',
+    instagram:   '',
+    facebook:    '',
+    responsable: '',
+  });
+  const [contactErr, setContactErr] = useState<Record<string, string>>({});
+
+  /* ── Paso 5: Legal + Documentos ──────────────────────────────────────────── */
+  const [legal, setLegal] = useState({
+    legalId:       '',
+    donationClabe: '',
+    schedule:      '',
+    vetName:       '',
+    vetPhone:      '',
+    ref1Name:      '',
+    ref1Phone:     '',
+    ref2Name:      '',
+    ref2Phone:     '',
+  });
   const [docs, setDocs] = useState({
     facility_photos: [] as File[],
     legal_doc:       [] as File[],
   });
   const [docsErr, setDocsErr] = useState<Record<string, string>>({});
 
-  const toggleService = (s: string) =>
-    setDetails((d) => ({
-      ...d,
-      services: d.services.includes(s)
-        ? d.services.filter((x) => x !== s)
-        : [...d.services, s],
-    }));
-
   /* ── Validaciones ─────────────────────────────────────────────────────────── */
   const v1 = () => {
-    const e: typeof basErr = {};
-    if (basics.name.trim().length < 2) e.name     = 'Mínimo 2 caracteres';
-    if (!basics.email.includes('@'))   e.email    = 'Email inválido';
-    if (basics.password.length < 8)    e.password = 'Mínimo 8 caracteres';
-    setBasErr(e);
+    const e: typeof credsErr = {};
+    if (creds.name.trim().length < 2) e.name     = 'Mínimo 2 caracteres';
+    if (!creds.email.includes('@'))   e.email    = 'Email inválido';
+    if (creds.password.length < 8)   e.password = 'Mínimo 8 caracteres';
+    setCredsErr(e);
     return !Object.keys(e).length;
   };
 
   const v2 = () => {
     const e: Record<string, string> = {};
-    if (!details.city.trim())        e.city        = 'La ciudad es requerida';
-    if (!details.phone.trim())       e.phone       = 'El teléfono es requerido';
-    if (!details.org_type)           e.org_type    = 'Selecciona el tipo de organización';
-    if (!details.description.trim()) e.description = 'Agrega una descripción';
-    setDetErr(e);
+    if (!basic.descripcion.trim()) e.descripcion = 'Agrega una descripción';
+    setBasicErr(e);
     return !Object.keys(e).length;
   };
 
   const v3 = () => {
     const e: Record<string, string> = {};
-    if (!docs.facility_photos.length)
-      e.facility_photos = 'Sube al menos una foto de tus instalaciones';
+    if (!loc.calle.trim())  e.calle  = 'La dirección es requerida';
+    if (!loc.ciudad.trim()) e.ciudad = 'La ciudad es requerida';
+    if (!loc.estado)        e.estado = 'Selecciona un estado';
+    setLocErr(e);
+    return !Object.keys(e).length;
+  };
+
+  const v4 = () => {
+    const e: Record<string, string> = {};
+    if (!contact.telefono.trim())    e.telefono    = 'El teléfono es requerido';
+    if (!contact.responsable.trim()) e.responsable = 'El nombre del responsable es requerido';
+    setContactErr(e);
+    return !Object.keys(e).length;
+  };
+
+  const v5 = () => {
+    const e: Record<string, string> = {};
+    if (!docs.facility_photos.length) e.facility_photos = 'Sube al menos una foto de tus instalaciones';
     setDocsErr(e);
     return !Object.keys(e).length;
   };
@@ -83,23 +131,73 @@ export default function FoundationRegisterForm({ onSuccess }: Props) {
   const next = () => {
     if (step === 1 && !v1()) return;
     if (step === 2 && !v2()) return;
+    if (step === 3 && !v3()) return;
+    if (step === 4 && !v4()) return;
     setStep((s) => (s + 1) as Step);
   };
 
   const submit = async () => {
-    if (!v3()) return;
+    if (!v5()) return;
     setApiError(null);
     setSubmitting(true);
     try {
+      const tipoLabel: Record<string, string> = {
+        publica: 'Pública / Municipal', privada: 'Privada',
+        ong: 'ONG / Asociación Civil', informal: 'Grupo informal',
+      };
+      const extraLines: string[] = [];
+      if (basic.tipo)            extraLines.push(`Tipo: ${tipoLabel[basic.tipo] ?? basic.tipo}`);
+      if (basic.animales.length) extraLines.push(`Animales: ${basic.animales.join(', ')}`);
+      if (basic.servicios.length) extraLines.push(`Servicios: ${basic.servicios.join(', ')}`);
+      if (basic.capacidad)       extraLines.push(`Capacidad: ${basic.capacidad} animales`);
+      const description = [basic.descripcion, ...extraLines].filter(Boolean).join('\n');
+
+      const foundingYear = parseInt(basic.anio, 10);
+      const years = basic.anio && !isNaN(foundingYear)
+        ? Math.max(0, new Date().getFullYear() - foundingYear)
+        : 0;
+
+      const fullAddress = [loc.calle, loc.colonia].filter(Boolean).join(', ');
+
+      const refsLines: string[] = [];
+      if (legal.ref1Name.trim()) refsLines.push(`${legal.ref1Name.trim()} — ${legal.ref1Phone.trim()}`);
+      if (legal.ref2Name.trim()) refsLines.push(`${legal.ref2Name.trim()} — ${legal.ref2Phone.trim()}`);
+
+      // 1 — Crear la cuenta con todos los datos
       await registerFoundation({
-        email:       basics.email.trim(),
-        password:    basics.password,
-        name:        basics.name.trim(),
-        city:        details.city.trim(),
-        phone:       details.phone.trim() || undefined,
-        description: details.description.trim() || undefined,
-        years:       Number.parseInt(details.years, 10) || 0,
+        email:          creds.email.trim(),
+        password:       creds.password,
+        name:           creds.name.trim(),
+        city:           loc.ciudad.trim(),
+        description:    description || undefined,
+        phone:          contact.telefono.trim() || undefined,
+        years,
+        address:        fullAddress || undefined,
+        state:          loc.estado || undefined,
+        postal_code:    loc.cp || undefined,
+        whatsapp:       contact.whatsapp.trim()    || undefined,
+        website:        contact.sitio.trim()       || undefined,
+        responsible:    contact.responsable.trim() || undefined,
+        instagram:      contact.instagram.trim()   || undefined,
+        facebook:       contact.facebook.trim()    || undefined,
+        schedule:       legal.schedule.trim()      || undefined,
+        references:     refsLines.join('\n')       || undefined,
+        vet_name:       legal.vetName.trim()       || undefined,
+        vet_phone:      legal.vetPhone.trim()      || undefined,
+        legal_id:       legal.legalId.trim()       || undefined,
+        donation_clabe: legal.donationClabe.trim() || undefined,
       });
+
+      // 2 — Subir documentos (no bloquea el registro si falla)
+      try {
+        await foundationsApi.uploadDocuments({
+          refugePhotos: docs.facility_photos.length > 0 ? docs.facility_photos : undefined,
+          acta:         docs.legal_doc[0] ?? null,
+        });
+      } catch {
+        // La cuenta fue creada; los documentos se pueden subir más adelante.
+      }
+
       onSuccess();
     } catch (err) {
       setApiError(extractApiError(err, 'No pudimos registrar tu refugio'));
@@ -113,7 +211,7 @@ export default function FoundationRegisterForm({ onSuccess }: Props) {
       <StepsBar current={step} labels={STEPS} onGoTo={(n) => setStep(n as Step)} />
       {apiError && <div className="form-error-banner">{apiError}</div>}
 
-      {/* ── Paso 1: Datos del refugio ──────────────────────────────────────── */}
+      {/* ── Paso 1: Credenciales ───────────────────────────────────────────── */}
       {step === 1 && (
         <div className="form-grid">
           <FormField
@@ -121,9 +219,9 @@ export default function FoundationRegisterForm({ onSuccess }: Props) {
             name="name"
             autoComplete="organization"
             required
-            value={basics.name}
-            error={basErr.name}
-            onChange={(e) => setBasics((b) => ({ ...b, name: e.target.value }))}
+            value={creds.name}
+            error={credsErr.name}
+            onChange={(e) => setCreds((c) => ({ ...c, name: e.target.value }))}
           />
           <div className="form-row">
             <FormField
@@ -132,9 +230,9 @@ export default function FoundationRegisterForm({ onSuccess }: Props) {
               type="email"
               autoComplete="email"
               required
-              value={basics.email}
-              error={basErr.email}
-              onChange={(e) => setBasics((b) => ({ ...b, email: e.target.value }))}
+              value={creds.email}
+              error={credsErr.email}
+              onChange={(e) => setCreds((c) => ({ ...c, email: e.target.value }))}
             />
             <FormField
               label="Contraseña"
@@ -144,50 +242,26 @@ export default function FoundationRegisterForm({ onSuccess }: Props) {
               required
               minLength={8}
               hint="Mínimo 8 caracteres"
-              value={basics.password}
-              error={basErr.password}
-              onChange={(e) => setBasics((b) => ({ ...b, password: e.target.value }))}
+              value={creds.password}
+              error={credsErr.password}
+              onChange={(e) => setCreds((c) => ({ ...c, password: e.target.value }))}
             />
           </div>
-
           <div className="form-info-box">
             ⏳ Tu cuenta entrará en revisión. Un administrador la aprobará antes de que puedas publicar mascotas.
           </div>
         </div>
       )}
 
-      {/* ── Paso 2: Detalles ───────────────────────────────────────────────── */}
+      {/* ── Paso 2: Básico ─────────────────────────────────────────────────── */}
       {step === 2 && (
         <div className="form-grid">
-          <div className="form-row">
-            <FormField
-              label="Ciudad"
-              name="city"
-              required
-              value={details.city}
-              error={detErr.city}
-              onChange={(e) => setDetails((d) => ({ ...d, city: e.target.value }))}
-            />
-            <FormField
-              label="Teléfono de contacto"
-              name="phone"
-              type="tel"
-              autoComplete="tel"
-              required
-              value={details.phone}
-              error={detErr.phone}
-              onChange={(e) => setDetails((d) => ({ ...d, phone: e.target.value }))}
-            />
-          </div>
-
           <FormField
             variant="select"
             label="Tipo de organización"
-            name="org_type"
-            required
-            value={details.org_type}
-            error={detErr.org_type}
-            onChange={(e) => setDetails((d) => ({ ...d, org_type: e.target.value }))}
+            name="tipo"
+            value={basic.tipo}
+            onChange={(e) => setBasic((b) => ({ ...b, tipo: e.target.value }))}
           >
             <option value="">Seleccionar…</option>
             <option value="publica">Pública / Municipal</option>
@@ -196,70 +270,247 @@ export default function FoundationRegisterForm({ onSuccess }: Props) {
             <option value="informal">Grupo informal</option>
           </FormField>
 
-          <div className="form-row">
-            <FormField
-              label="Años activos"
-              name="years"
-              type="number"
-              min={0}
-              max={200}
-              value={details.years}
-              onChange={(e) => setDetails((d) => ({ ...d, years: e.target.value }))}
-            />
-            <FormField
-              label="Capacidad aprox."
-              name="capacity"
-              type="number"
-              min={0}
-              hint="Número de animales"
-              value={details.capacity}
-              onChange={(e) => setDetails((d) => ({ ...d, capacity: e.target.value }))}
-            />
-          </div>
-
-          <FormField
-            label="Sitio web"
-            name="website"
-            type="url"
-            hint="Opcional — https://..."
-            value={details.website}
-            onChange={(e) => setDetails((d) => ({ ...d, website: e.target.value }))}
-          />
-
           <FormField
             variant="textarea"
             label="Descripción del refugio"
-            name="description"
+            name="descripcion"
             rows={3}
             required
             hint="Misión, historia y cómo ayudan a los animales"
-            value={details.description}
-            error={detErr.description}
-            onChange={(e) => setDetails((d) => ({ ...d, description: e.target.value }))}
+            value={basic.descripcion}
+            error={basicErr.descripcion}
+            onChange={(e) => setBasic((b) => ({ ...b, descripcion: e.target.value }))}
           />
+
+          <div className="form-row">
+            <FormField
+              label="Año de fundación"
+              name="anio"
+              type="number"
+              placeholder="2018"
+              value={basic.anio}
+              onChange={(e) => setBasic((b) => ({ ...b, anio: e.target.value }))}
+            />
+            <FormField
+              label="Capacidad aproximada"
+              name="capacidad"
+              type="number"
+              hint="Número de animales"
+              value={basic.capacidad}
+              onChange={(e) => setBasic((b) => ({ ...b, capacidad: e.target.value }))}
+            />
+          </div>
+
+          <div className="form-field-block">
+            <span className="field__label">Animales que atienden</span>
+            <div className="form-pills">
+              {ANIMALES.map((a) => (
+                <button
+                  key={a} type="button"
+                  className={`form-pill${basic.animales.includes(a) ? ' form-pill--on' : ''}`}
+                  onClick={() => setBasic((b) => ({ ...b, animales: toggleArr(b.animales, a) }))}
+                >{a}</button>
+              ))}
+            </div>
+          </div>
 
           <div className="form-field-block">
             <span className="field__label">Servicios que ofrecen</span>
-            <div className="service-pills">
-              {SERVICES.map((s) => (
+            <div className="form-pills">
+              {SERVICIOS.map((s) => (
                 <button
-                  key={s}
-                  type="button"
-                  className={`service-pill${details.services.includes(s) ? ' service-pill--on' : ''}`}
-                  onClick={() => toggleService(s)}
-                  aria-pressed={details.services.includes(s)}
-                >
-                  {s}
-                </button>
+                  key={s} type="button"
+                  className={`form-pill${basic.servicios.includes(s) ? ' form-pill--on' : ''}`}
+                  onClick={() => setBasic((b) => ({ ...b, servicios: toggleArr(b.servicios, s) }))}
+                >{s}</button>
               ))}
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Paso 3: Documentos ─────────────────────────────────────────────── */}
+      {/* ── Paso 3: Ubicación ──────────────────────────────────────────────── */}
       {step === 3 && (
         <div className="form-grid">
+          <FormField
+            label="Calle y número"
+            name="calle"
+            required
+            value={loc.calle}
+            error={locErr.calle}
+            onChange={(e) => setLoc((l) => ({ ...l, calle: e.target.value }))}
+          />
+          <FormField
+            label="Colonia / Barrio"
+            name="colonia"
+            value={loc.colonia}
+            onChange={(e) => setLoc((l) => ({ ...l, colonia: e.target.value }))}
+          />
+          <div className="form-row">
+            <FormField
+              label="Ciudad"
+              name="ciudad"
+              required
+              value={loc.ciudad}
+              error={locErr.ciudad}
+              onChange={(e) => setLoc((l) => ({ ...l, ciudad: e.target.value }))}
+            />
+            <FormField
+              label="C.P."
+              name="cp"
+              value={loc.cp}
+              onChange={(e) => setLoc((l) => ({ ...l, cp: e.target.value }))}
+            />
+          </div>
+          <FormField
+            variant="select"
+            label="Estado"
+            name="estado"
+            required
+            value={loc.estado}
+            error={locErr.estado}
+            onChange={(e) => setLoc((l) => ({ ...l, estado: e.target.value }))}
+          >
+            <option value="">Seleccionar estado…</option>
+            {ESTADOS.map((s) => <option key={s} value={s}>{s}</option>)}
+          </FormField>
+        </div>
+      )}
+
+      {/* ── Paso 4: Contacto ───────────────────────────────────────────────── */}
+      {step === 4 && (
+        <div className="form-grid">
+          <FormField
+            label="Nombre del responsable principal"
+            name="responsable"
+            required
+            value={contact.responsable}
+            error={contactErr.responsable}
+            onChange={(e) => setContact((c) => ({ ...c, responsable: e.target.value }))}
+          />
+          <div className="form-row">
+            <FormField
+              label="Teléfono"
+              name="telefono"
+              type="tel"
+              required
+              value={contact.telefono}
+              error={contactErr.telefono}
+              onChange={(e) => setContact((c) => ({ ...c, telefono: e.target.value }))}
+            />
+            <FormField
+              label="WhatsApp"
+              name="whatsapp"
+              type="tel"
+              value={contact.whatsapp}
+              onChange={(e) => setContact((c) => ({ ...c, whatsapp: e.target.value }))}
+            />
+          </div>
+          <FormField
+            label="Sitio web"
+            name="sitio"
+            type="url"
+            hint="Opcional — https://..."
+            value={contact.sitio}
+            onChange={(e) => setContact((c) => ({ ...c, sitio: e.target.value }))}
+          />
+          <div className="form-row">
+            <FormField
+              label="Instagram"
+              name="instagram"
+              placeholder="@mirefugio o URL completa"
+              value={contact.instagram}
+              onChange={(e) => setContact((c) => ({ ...c, instagram: e.target.value }))}
+            />
+            <FormField
+              label="Facebook"
+              name="facebook"
+              placeholder="facebook.com/mirefugio"
+              value={contact.facebook}
+              onChange={(e) => setContact((c) => ({ ...c, facebook: e.target.value }))}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Paso 5: Legal + Documentos ─────────────────────────────────────── */}
+      {step === 5 && (
+        <div className="form-grid">
+          <div className="form-row">
+            <FormField
+              label="RFC o Número de registro legal"
+              name="legalId"
+              placeholder="XAXX010101000 / Registro AC"
+              value={legal.legalId}
+              onChange={(e) => setLegal((l) => ({ ...l, legalId: e.target.value }))}
+            />
+            <FormField
+              label="CLABE para donaciones"
+              name="donationClabe"
+              placeholder="18 dígitos"
+              value={legal.donationClabe}
+              onChange={(e) => setLegal((l) => ({ ...l, donationClabe: e.target.value }))}
+            />
+          </div>
+
+          <FormField
+            label="Horario de atención / visitas"
+            name="schedule"
+            placeholder="Ej. Lunes a viernes 10:00-18:00"
+            value={legal.schedule}
+            onChange={(e) => setLegal((l) => ({ ...l, schedule: e.target.value }))}
+          />
+
+          <div className="form-row">
+            <FormField
+              label="Nombre del veterinario"
+              name="vetName"
+              placeholder="Dr. Juan Pérez"
+              value={legal.vetName}
+              onChange={(e) => setLegal((l) => ({ ...l, vetName: e.target.value }))}
+            />
+            <FormField
+              label="Teléfono del veterinario"
+              name="vetPhone"
+              type="tel"
+              value={legal.vetPhone}
+              onChange={(e) => setLegal((l) => ({ ...l, vetPhone: e.target.value }))}
+            />
+          </div>
+
+          <div className="form-section-label">Referencias</div>
+          <div className="form-row">
+            <FormField
+              label="Referencia 1 — Nombre"
+              name="ref1Name"
+              value={legal.ref1Name}
+              onChange={(e) => setLegal((l) => ({ ...l, ref1Name: e.target.value }))}
+            />
+            <FormField
+              label="Referencia 1 — Teléfono"
+              name="ref1Phone"
+              type="tel"
+              value={legal.ref1Phone}
+              onChange={(e) => setLegal((l) => ({ ...l, ref1Phone: e.target.value }))}
+            />
+          </div>
+          <div className="form-row">
+            <FormField
+              label="Referencia 2 — Nombre"
+              name="ref2Name"
+              value={legal.ref2Name}
+              onChange={(e) => setLegal((l) => ({ ...l, ref2Name: e.target.value }))}
+            />
+            <FormField
+              label="Referencia 2 — Teléfono"
+              name="ref2Phone"
+              type="tel"
+              value={legal.ref2Phone}
+              onChange={(e) => setLegal((l) => ({ ...l, ref2Phone: e.target.value }))}
+            />
+          </div>
+
+          <div className="form-section-label">Documentos</div>
           <FileZone
             label="Fotos de las instalaciones"
             hint="Muestra el espacio donde viven los animales — hasta 6 fotos"
@@ -271,7 +522,6 @@ export default function FoundationRegisterForm({ onSuccess }: Props) {
             onChange={(f) => setDocs((d) => ({ ...d, facility_photos: f }))}
             error={docsErr.facility_photos}
           />
-
           <FileZone
             label="Documentos legales"
             hint="Acta constitutiva, RFC o registro oficial — opcional pero recomendado"
@@ -281,7 +531,7 @@ export default function FoundationRegisterForm({ onSuccess }: Props) {
           />
 
           <div className="form-info-box">
-            📋 Los documentos ayudan al administrador a validar tu refugio más rápido y aumentan la confianza de los adoptantes.
+            🔒 Esta información es confidencial y solo la revisa el administrador para validar tu solicitud.
           </div>
         </div>
       )}
@@ -302,9 +552,9 @@ export default function FoundationRegisterForm({ onSuccess }: Props) {
           className="btn btn--amber btn--lg"
           style={{ marginLeft: step === 1 ? 'auto' : undefined }}
           disabled={submitting}
-          onClick={step === 3 ? submit : next}
+          onClick={step === 5 ? submit : next}
         >
-          {step === 3
+          {step === 5
             ? (submitting ? 'Registrando…' : 'Registrar refugio 🐾')
             : 'Continuar →'}
         </button>

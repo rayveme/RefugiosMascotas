@@ -54,14 +54,22 @@ class Settings(BaseSettings):
     @field_validator("database_url", mode="before")
     @classmethod
     def _normalize_db_url(cls, v: str) -> str:
-        """Railway y otros proveedores entregan URLs estilo `postgres://` o
-        `postgresql://`. Normalizamos al driver async que usa la app."""
+        """Normaliza URLs de distintos proveedores al formato asyncpg.
+
+        - Railway: postgres:// o postgresql://
+        - Neon: postgresql://...?sslmode=require  →  ?ssl=require
+        - asyncpg no acepta sslmode como query param, usa ssl=require.
+        """
         if not v:
             return v
+        # Normalizar esquema
         if v.startswith("postgres://"):
-            v = "postgresql://" + v[len("postgres://") :]
-        if v.startswith("postgresql://"):
-            v = "postgresql+asyncpg://" + v[len("postgresql://") :]
+            v = "postgresql://" + v[len("postgres://"):]
+        if v.startswith("postgresql://") and "+asyncpg" not in v:
+            v = "postgresql+asyncpg://" + v[len("postgresql://"):]
+        # Neon y otros usan sslmode=require; asyncpg necesita ssl=require
+        v = v.replace("sslmode=require", "ssl=require")
+        v = v.replace("sslmode=prefer", "ssl=prefer")
         return v
 
     @property
@@ -70,28 +78,36 @@ class Settings(BaseSettings):
 
     @property
     def sync_database_url(self) -> str:
-        """Versión síncrona de la URL para Alembic (psycopg2)."""
-        return self.database_url.replace("+asyncpg", "+psycopg2")
+        """Versión síncrona de la URL para Alembic (psycopg2).
+
+        asyncpg usa ?ssl=require; psycopg2 usa ?sslmode=require.
+        """
+        url = self.database_url.replace("+asyncpg", "+psycopg2")
+        url = url.replace("ssl=require", "sslmode=require")
+        url = url.replace("ssl=prefer", "sslmode=prefer")
+        return url
 
     @property
     def cors_allowed_origins(self) -> list[str]:
         """Lista final de orígenes permitidos.
 
         Si `cors_origins` está definida, se respeta tal cual.
-        Si no, se construye una lista local-friendly a partir de `frontend_url`.
+        Si no, se incluye el dominio de producción en Vercel + hosts locales de Vite.
         """
         if self.cors_origins.strip():
             return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
         return [
+            # Producción (Vercel)
+            "https://refugios-mascotas-rrao.vercel.app",
+            # Frontend URL configurable (útil si cambia el dominio de Vercel)
             self.frontend_url,
+            # Desarrollo local (Vite)
             "http://localhost:5173",
             "http://127.0.0.1:5173",
             "http://localhost:5174",
             "http://127.0.0.1:5174",
             "http://localhost:4173",
             "http://127.0.0.1:4173",
-            # Cuando Vite se expone en red (o en Docker), el origin puede verse como IP local.
-            # Permitimos el origin actual observado en consola.
             "http://172.20.10.2:5174",
         ]
 

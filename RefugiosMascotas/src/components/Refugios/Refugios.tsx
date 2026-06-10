@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useReveal } from '../../hooks/useReveal';
 import { foundationsApi } from '../../api/foundations';
-import { refugios as fallbackRefugios } from '../../data/refugios';
 import type { Refugio } from '../../types';
 import './Refugios.css';
 
@@ -62,28 +61,14 @@ export default function Refugios({ refreshKey }: Props) {
   const headerRef = useReveal<HTMLDivElement>();
   const [refugios, setRefugios] = useState<Refugio[]>([]);
   const [loading, setLoading] = useState(true);
-  const [usingFallback, setUsingFallback] = useState(false);
 
   useEffect(() => {
     let alive = true;
     setLoading(true);
     foundationsApi
       .list()
-      .then((data) => {
-        if (!alive) return;
-        if (data.length === 0) {
-          setRefugios(fallbackRefugios);
-          setUsingFallback(true);
-        } else {
-          setRefugios(data);
-          setUsingFallback(false);
-        }
-      })
-      .catch(() => {
-        if (!alive) return;
-        setRefugios(fallbackRefugios);
-        setUsingFallback(true);
-      })
+      .then((data) => { if (alive) setRefugios(data); })
+      .catch(() => { /* silencioso — se muestra estado vacío */ })
       .finally(() => alive && setLoading(false));
     return () => { alive = false; };
   }, [refreshKey]);
@@ -118,12 +103,6 @@ export default function Refugios({ refreshKey }: Props) {
           </Link>
         </div>
 
-        {usingFallback && !loading && (
-          <p className="refugios-fallback-note">
-            Mostrando red de ejemplo — todavía no hay refugios registrados o el back no está disponible.
-          </p>
-        )}
-
         <div className="refugios-grid">
           {loading
             ? Array.from({ length: 6 }).map((_, i) => (
@@ -133,6 +112,15 @@ export default function Refugios({ refreshKey }: Props) {
                   <div className="skeleton-line skeleton-line--sm" />
                 </div>
               ))
+            : refugios.length === 0
+              ? (
+                <div className="refugios-empty-state">
+                  <p className="refugios-empty-state__title">Aún no hay refugios registrados</p>
+                  <p className="refugios-empty-state__sub">
+                    ¿Tienes un refugio o fundación? ¡Sé el primero en unirte a la red!
+                  </p>
+                </div>
+              )
             : refugios.map((r, i) => (
                 <RefugioCard key={r.id} refugio={r} delay={(i % 3) * 0.1} />
               ))}

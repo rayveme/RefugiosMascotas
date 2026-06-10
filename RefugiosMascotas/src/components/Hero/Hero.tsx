@@ -1,13 +1,25 @@
+import { useEffect, useState } from "react";
+import { fetchPublicStats, type PublicStats } from "../../api/client";
 import "./Hero.css";
 
-const stats = [
-  { number: "24", label: "Refugios asociados" },
-  { number: "1,840", label: "Mascotas disponibles" },
-  { number: "3,200+", label: "Adopciones exitosas" },
-  { number: "12", label: "Ciudades con presencia" },
-];
+function fmt(n: number): string {
+  return n.toLocaleString("es-MX");
+}
 
 export default function Hero() {
+  const [stats, setStats] = useState<PublicStats | null>(null);
+
+  useEffect(() => {
+    fetchPublicStats().then(setStats).catch(() => {});
+  }, []);
+
+  const statItems = [
+    { value: stats?.foundations,   label: "Refugios asociados"   },
+    { value: stats?.available_pets, label: "Mascotas disponibles" },
+    { value: stats?.adopted_pets,   label: "Adopciones exitosas"  },
+    { value: stats?.cities,         label: "Ciudades con presencia" },
+  ];
+
   return (
     <section className="hero" aria-labelledby="hero-headline">
       {/* Background atmosphere */}
@@ -91,9 +103,11 @@ export default function Hero() {
       {/* Stats bar */}
       <div className="hero__stats">
         <div className="container hero__stats-grid">
-          {stats.map((s) => (
+          {statItems.map((s) => (
             <div className="hero__stat" key={s.label}>
-              <div className="hero__stat-number">{s.number}</div>
+              <div className="hero__stat-number">
+                {s.value == null ? "—" : fmt(s.value)}
+              </div>
               <div className="hero__stat-label">{s.label}</div>
             </div>
           ))}

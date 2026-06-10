@@ -16,6 +16,18 @@ export interface Pet {
   sterilized?: boolean;
   gradientFrom: string;
   gradientTo: string;
+  // Campos del API
+  isAdopted?: boolean;
+  foundationId?: number;
+  imageUrl?: string | null;
+  imagePublicId?: string | null;
+  // Campos de detalle / datos locales
+  photos?: string[];
+  description?: string;
+  gender?: string;
+  weight?: string;
+  diseases?: string;
+  vaccines?: Vaccine[];
 }
 
 export interface Refugio {
@@ -61,6 +73,30 @@ export interface AuthFoundation {
   gradientTo: string;
   profileComplete: boolean;
   status: FoundationStatus;
+  // Ubicación adicional
+  address: string | null;
+  state: string | null;
+  postalCode: string | null;
+  // Contacto adicional
+  whatsapp: string | null;
+  website: string | null;
+  responsible: string | null;
+  // Redes sociales
+  instagram: string | null;
+  facebook: string | null;
+  // Operación
+  schedule: string | null;
+  references: string | null;
+  vetName: string | null;
+  vetPhone: string | null;
+  // Legal
+  legalId: string | null;
+  donationClabe: string | null;
+  // Documentos de verificación
+  idFrontUrl: string | null;
+  actaUrl: string | null;
+  proofAddressUrl: string | null;
+  refugePhotosUrls: string | null;
 }
 
 export interface AuthAdmin {

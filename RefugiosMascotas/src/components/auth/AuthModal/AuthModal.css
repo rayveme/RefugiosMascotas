@@ -568,23 +568,28 @@
 }
 
 .service-pill {
-  padding: 7px 14px;
+  padding: 7px 16px;
   border-radius: var(--radius-full);
-  border: 1.5px solid var(--cream-dark);
+  border: 1.5px solid #9ca3af;
   background: #fff;
   font-family: inherit;
   font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--text-mid);
+  font-weight: 600;
+  color: #374151;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 
 .service-pill--on {
   border-color: var(--forest);
-  background: rgba(45, 61, 10, 0.08);
-  color: var(--forest-deep);
+  background: var(--forest);
+  color: #fff;
   font-weight: 600;
+}
+
+.service-pill:hover:not(.service-pill--on) {
+  border-color: var(--forest);
+  color: var(--forest-deep);
 }
 
 /* ── Responsive ────────────────────────────────────────────── */

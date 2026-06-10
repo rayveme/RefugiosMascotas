@@ -5,12 +5,9 @@ from app.cloudinary_client import build_image_url, delete_image, upload_pet_imag
 from app.deps import ApprovedFoundation, SessionDep
 from app.models import Foundation, FoundationStatus, Pet, PetType
 from app.schemas.pet import PetCreate, PetRead, PetUpdate
+from app.upload_utils import IMAGE_MIME, MAX_IMAGE_BYTES, resolve_mime
 
 router = APIRouter(prefix="/pets", tags=["pets"])
-
-# 5 MiB. Cloudinary acepta más en plan gratis pero queremos cortar antes.
-MAX_IMAGE_BYTES = 5 * 1024 * 1024
-ALLOWED_IMAGE_MIME = {"image/jpeg", "image/png", "image/webp"}
 
 
 def _to_read(pet: Pet) -> PetRead:
@@ -123,13 +120,7 @@ async def upload_image(
     if pet.foundation_id != foundation.id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "No puedes subir foto a otra fundación")
 
-    if file.content_type not in ALLOWED_IMAGE_MIME:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            "Solo se aceptan imágenes JPEG, PNG o WebP",
-        )
-
-    content = await file.read()
+    content, _mime = await resolve_mime(file, IMAGE_MIME)
     if len(content) > MAX_IMAGE_BYTES:
         raise HTTPException(
             status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,

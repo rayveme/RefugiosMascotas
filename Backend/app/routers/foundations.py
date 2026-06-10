@@ -1,11 +1,31 @@
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 from sqlalchemy import func, or_, select
 
+from app.cloudinary_client import upload_document
+from app.config import get_settings
 from app.deps import CurrentFoundation, SessionDep
 from app.models import Foundation, FoundationStatus, Pet
 from app.schemas.foundation import FoundationRead, FoundationUpdate
+from app.upload_utils import DOC_MIME, IMAGE_MIME, MAX_DOC_BYTES, resolve_mime
 
 router = APIRouter(prefix="/foundations", tags=["foundations"])
+settings = get_settings()
+
+
+def _foundation_docs_folder() -> str:
+    base = settings.cloudinary_folder.rsplit("/", 1)[0]
+    return f"{base}/foundation-docs"
+
+
+async def _upload_file(file: UploadFile, folder: str, allowed_mime: set[str]) -> str:
+    content, _mime = await resolve_mime(file, allowed_mime)
+    if len(content) > MAX_DOC_BYTES:
+        raise HTTPException(
+            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            f"Archivo muy grande (máx {MAX_DOC_BYTES // (1024 * 1024)} MB)",
+        )
+    result = await upload_document(content, folder=folder, filename=file.filename)
+    return str(result["secure_url"])
 
 
 def _to_read(foundation: Foundation, animals: int) -> FoundationRead:
@@ -60,6 +80,43 @@ async def update_me(
 ) -> FoundationRead:
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(foundation, field, value)
+    await session.commit()
+    await session.refresh(foundation)
+    animals = await session.scalar(
+        select(func.count(Pet.id)).where(Pet.foundation_id == foundation.id)
+    )
+    return _to_read(foundation, animals or 0)
+
+
+@router.post(
+    "/me/documents",
+    response_model=FoundationRead,
+    summary="Sube documentos de verificación del refugio",
+)
+async def upload_my_documents(
+    foundation: CurrentFoundation,
+    session: SessionDep,
+    id_front:      UploadFile | None = File(None, description="Identificación del responsable"),
+    acta:          UploadFile | None = File(None, description="Acta constitutiva / Comprobante de registro"),
+    proof_address: UploadFile | None = File(None, description="Comprobante de domicilio del refugio"),
+    refuge_photos: list[UploadFile]  = File(default=[], description="Fotos del refugio (máx 3)"),
+) -> FoundationRead:
+    folder = _foundation_docs_folder()
+
+    if id_front:
+        foundation.id_front_url = await _upload_file(id_front, folder, DOC_MIME)
+    if acta:
+        foundation.acta_url = await _upload_file(acta, folder, DOC_MIME)
+    if proof_address:
+        foundation.proof_address_url = await _upload_file(proof_address, folder, DOC_MIME)
+    if refuge_photos:
+        urls: list[str] = []
+        for photo in refuge_photos[:3]:
+            url = await _upload_file(photo, folder, IMAGE_MIME)
+            urls.append(url)
+        if urls:
+            foundation.refuge_photos_urls = ",".join(urls)
+
     await session.commit()
     await session.refresh(foundation)
     animals = await session.scalar(

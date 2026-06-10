@@ -32,6 +32,30 @@ export function mapFoundation(f: FoundationApi): AuthFoundation {
     gradientTo: f.gradient_to,
     profileComplete: f.profile_complete,
     status: f.status,
+    // Ubicación adicional
+    address:    f.address    ?? null,
+    state:      f.state      ?? null,
+    postalCode: f.postal_code ?? null,
+    // Contacto adicional
+    whatsapp:    f.whatsapp    ?? null,
+    website:     f.website     ?? null,
+    responsible: f.responsible ?? null,
+    // Redes sociales
+    instagram:    f.instagram     ?? null,
+    facebook:     f.facebook      ?? null,
+    // Operación
+    schedule:     f.schedule      ?? null,
+    references:   f.references    ?? null,
+    vetName:      f.vet_name      ?? null,
+    vetPhone:     f.vet_phone     ?? null,
+    // Legal
+    legalId:       f.legal_id      ?? null,
+    donationClabe: f.donation_clabe ?? null,
+    // Documentos de verificación
+    idFrontUrl:       f.id_front_url       ?? null,
+    actaUrl:          f.acta_url           ?? null,
+    proofAddressUrl:  f.proof_address_url  ?? null,
+    refugePhotosUrls: f.refuge_photos_urls ?? null,
   };
 }
 

@@ -4,7 +4,6 @@ import { useAuth } from '../../hooks/useAuth';
 import { petsApi } from '../../api/pets';
 import { adoptionsApi } from '../../api/adoptions';
 import { extractApiError } from '../../api/client';
-import { pets as fallbackPets } from '../../data/pets';
 import type { Pet } from '../../types';
 import './PetCarousel.css';
 
@@ -120,10 +119,12 @@ const CARD_W = 272 + 22;
 interface Props {
   onRequireAuth: () => void;
   onRequireProfile: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
+  /** Abre el modal de completar perfil cuando el adoptante tiene datos incompletos. */
+  onCompleteProfile?: () => void;
   refreshKey?: number;
 }
 
-export default function PetCarousel({ onRequireAuth, onRequireProfile, refreshKey }: Props) {
+export default function PetCarousel({ onRequireAuth, onRequireProfile, onCompleteProfile, refreshKey }: Props) {
   const trackRef  = useRef<HTMLDivElement>(null);
   const sectionRef = useReveal<HTMLElement>();
   const headerRef  = useReveal<HTMLDivElement>();
@@ -133,29 +134,23 @@ export default function PetCarousel({ onRequireAuth, onRequireProfile, refreshKe
 
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
-  const [usingFallback, setUsingFallback] = useState(false);
+  const [apiError, setApiError] = useState(false);
   const [adoptingId, setAdoptingId] = useState<number | null>(null);
   const [pendingPetIds, setPendingPetIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     let alive = true;
     setLoading(true);
+    setApiError(false);
     petsApi
       .list()
       .then((data) => {
         if (!alive) return;
-        if (data.length === 0) {
-          setPets(fallbackPets);
-          setUsingFallback(true);
-        } else {
-          setPets(data);
-          setUsingFallback(false);
-        }
+        setPets(data);
       })
       .catch(() => {
         if (!alive) return;
-        setPets(fallbackPets);
-        setUsingFallback(true);
+        setApiError(true);
       })
       .finally(() => alive && setLoading(false));
     return () => { alive = false; };
@@ -184,7 +179,11 @@ export default function PetCarousel({ onRequireAuth, onRequireProfile, refreshKe
       return;
     }
     if (!user.profile.profileComplete) {
-      onRequireProfile('Completa ciudad y teléfono en tu perfil para poder adoptar.', 'warning');
+      if (onCompleteProfile) {
+        onCompleteProfile();
+      } else {
+        onRequireProfile('Completa ciudad y teléfono en tu perfil para poder adoptar.', 'warning');
+      }
       return;
     }
     setAdoptingId(pet.id);
@@ -256,12 +255,6 @@ export default function PetCarousel({ onRequireAuth, onRequireProfile, refreshKe
           <a href="#" className="btn btn--ghost-dark">Ver todos</a>
         </div>
 
-        {usingFallback && !loading && (
-          <p className="pet-fallback-note">
-            Mostrando mascotas de ejemplo — el back no está disponible o aún no hay registros.
-          </p>
-        )}
-
         <div className="carousel-wrap">
           <div
             className="carousel-track"
@@ -286,13 +279,28 @@ export default function PetCarousel({ onRequireAuth, onRequireProfile, refreshKe
                     </div>
                   </div>
                 ))
+              : apiError
+                ? (
+                  <div className="pet-empty-state">
+                    <p className="pet-empty-state__title">No se pudo conectar al servidor</p>
+                    <p className="pet-empty-state__sub">Intenta recargar la página en unos momentos.</p>
+                  </div>
+                )
+              : pets.length === 0
+                ? (
+                  <div className="pet-empty-state">
+                    <DogIllo />
+                    <p className="pet-empty-state__title">Aún no hay mascotas registradas</p>
+                    <p className="pet-empty-state__sub">Las fundaciones irán publicando a sus animales muy pronto.</p>
+                  </div>
+                )
               : pets.map((pet) => (
                   <PetCard
                     key={pet.id}
                     pet={pet}
                     onAdopt={onAdopt}
                     adopting={adoptingId === pet.id}
-                    disabled={usingFallback}
+                    disabled={false}
                     alreadyRequested={pendingPetIds.has(pet.id)}
                   />
                 ))}

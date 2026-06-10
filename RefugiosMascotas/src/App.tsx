@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Navigate,
   Outlet,
@@ -12,6 +12,8 @@ import Footer from "./components/Footer/Footer";
 import AuthModal from "./components/auth/AuthModal/AuthModal";
 import PetForm from "./components/forms/PetForm/PetForm";
 import ProfileEditModal from "./components/forms/ProfileEditModal/ProfileEditModal";
+import CompleteAdopterProfileModal from "./components/forms/CompleteAdopterProfileModal/CompleteAdopterProfileModal";
+import CompleteFoundationProfileModal from "./components/forms/CompleteFoundationProfileModal/CompleteFoundationProfileModal";
 import RegistroRefugio from "./components/Registrorefugio/Registrorefugio";
 import DashboardRefugio from "./components/DashboardRefugio/Dashboardrefugio";
 import CitaFormModal from "./components/CitaCTA/CitaFormModal";
@@ -24,6 +26,10 @@ import FoundationDetailPage from "./pages/FoundationDetailPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import RequestsPage from "./pages/RequestsPage";
 import AdminPage from "./pages/AdminPage";
+import PrivacidadPage from "./pages/PrivacidadPage";
+import TerminosPage from "./pages/TerminosPage";
+import CookiesPage from "./pages/CookiesPage";
+import ContactoPage from "./pages/ContactoPage";
 
 import { AuthProvider } from "./context/AuthContext";
 import { useAuth } from "./hooks/useAuth";
@@ -37,7 +43,34 @@ function AppShell() {
   const [authMode, setAuthMode] = useState<"login" | "register" | null>(null);
   const [petFormOpen, setPetFormOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [completeProfileOpen, setCompleteProfileOpen] = useState(false);
+  const [completeFoundationOpen, setCompleteFoundationOpen] = useState(false);
   const [citaOpen, setCitaOpen] = useState(false);
+
+  // ── Auto-apertura post-login cuando el perfil está incompleto ─────────────
+  const prevUserIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    const currentRole = user?.role ?? null;
+    const currentId   = user ? (user.profile as { id: number }).id : null;
+    const wasLoggedOut = prevUserIdRef.current === null;
+    prevUserIdRef.current = currentId;
+
+    if (!wasLoggedOut || currentId === null) return;
+
+    if (currentRole === 'adopter' && user?.role === 'adopter' && !user.profile.profileComplete) {
+      const key = `profile_prompted_${currentId}`;
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        setCompleteProfileOpen(true);
+      }
+    } else if (currentRole === 'foundation' && user?.role === 'foundation' && !user.profile.profileComplete) {
+      const key = `foundation_prompted_${currentId}`;
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        setCompleteFoundationOpen(true);
+      }
+    }
+  }, [user]);
   const [petsRefreshKey, setPetsRefreshKey] = useState(0);
   const [foundationsRefreshKey, setFoundationsRefreshKey] = useState(0);
 
@@ -81,7 +114,26 @@ function AppShell() {
       return;
     }
 
+    // Si el perfil está incompleto → flujo de completar
+    if (user.role === 'foundation' && !user.profile.profileComplete) {
+      setCompleteFoundationOpen(true);
+      return;
+    }
+    if (user.role === 'adopter' && !user.profile.profileComplete) {
+      setCompleteProfileOpen(true);
+      return;
+    }
+
     setProfileOpen(true);
+  }, [user, openLogin]);
+
+  const openCompleteProfile = useCallback(() => {
+    if (!user) { openLogin(); return; }
+    if (user.role === 'foundation') {
+      setCompleteFoundationOpen(true);
+    } else {
+      setCompleteProfileOpen(true);
+    }
   }, [user, openLogin]);
 
   const bumpPets = useCallback(() => setPetsRefreshKey((k) => k + 1), []);
@@ -99,6 +151,7 @@ function AppShell() {
     openRegister,
     openPetForm,
     openProfileEdit,
+    openCompleteProfile,
     showToast,
     confirm,
   };
@@ -110,7 +163,18 @@ function AppShell() {
         onRegisterClick={openRegister}
         onPublishPetClick={openPetForm}
         onEditProfileClick={openProfileEdit}
-        onAgendarCitaClick={() => setCitaOpen(true)}
+        onAgendarCitaClick={() => {
+        // Si es adoptante con perfil incompleto, primero completar datos
+        if (user?.role === 'adopter' && !user.profile.profileComplete) {
+          notify.warning(
+            'Completa tu perfil primero',
+            'Necesitamos tus datos antes de agendar una visita.',
+          );
+          setCompleteProfileOpen(true);
+          return;
+        }
+        setCitaOpen(true);
+      }}
       />
 
       <main>
@@ -141,6 +205,16 @@ function AppShell() {
       <ProfileEditModal
         open={profileOpen}
         onClose={() => setProfileOpen(false)}
+      />
+
+      <CompleteAdopterProfileModal
+        open={completeProfileOpen}
+        onClose={() => setCompleteProfileOpen(false)}
+      />
+
+      <CompleteFoundationProfileModal
+        open={completeFoundationOpen}
+        onClose={() => setCompleteFoundationOpen(false)}
       />
 
       <CitaFormModal
@@ -184,6 +258,10 @@ export default function App() {
           <Route path="/registrar-refugio" element={<RegistroRefugio />} />
           <Route path="/dashboard" element={<DashboardRefugio />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/privacidad" element={<PrivacidadPage />} />
+          <Route path="/terminos" element={<TerminosPage />} />
+          <Route path="/cookies" element={<CookiesPage />} />
+          <Route path="/contacto" element={<ContactoPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

@@ -46,3 +46,22 @@ class FoundationRegister(BaseModel):
     description: str | None = Field(None, max_length=1000)
     phone: str | None = Field(None, max_length=30)
     years: int = Field(0, ge=0, le=200)
+    # Ubicación
+    address: str | None = Field(None, max_length=255)
+    state: str | None = Field(None, max_length=80)
+    postal_code: str | None = Field(None, max_length=10)
+    # Contacto adicional
+    whatsapp: str | None = Field(None, max_length=30)
+    website: str | None = Field(None, max_length=255)
+    responsible: str | None = Field(None, max_length=120)
+    # Redes sociales
+    instagram: str | None = Field(None, max_length=255)
+    facebook: str | None = Field(None, max_length=255)
+    # Operación
+    schedule: str | None = Field(None, max_length=500)
+    references: str | None = Field(None, max_length=1000)
+    vet_name: str | None = Field(None, max_length=120)
+    vet_phone: str | None = Field(None, max_length=30)
+    # Legal
+    legal_id: str | None = Field(None, max_length=50)
+    donation_clabe: str | None = Field(None, max_length=20)

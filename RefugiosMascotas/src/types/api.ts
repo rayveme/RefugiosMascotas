@@ -38,6 +38,30 @@ export interface FoundationApi {
   profile_complete: boolean;
   status: FoundationStatusApi;
   created_at: string;
+  // Ubicación adicional
+  address: string | null;
+  state: string | null;
+  postal_code: string | null;
+  // Contacto adicional
+  whatsapp: string | null;
+  website: string | null;
+  responsible: string | null;
+  // Redes sociales
+  instagram: string | null;
+  facebook: string | null;
+  // Operación
+  schedule: string | null;
+  references: string | null;
+  vet_name: string | null;
+  vet_phone: string | null;
+  // Legal
+  legal_id: string | null;
+  donation_clabe: string | null;
+  // Documentos de verificación
+  id_front_url: string | null;
+  acta_url: string | null;
+  proof_address_url: string | null;
+  refuge_photos_urls: string | null;
 }
 
 export interface AdminApi {
@@ -106,6 +130,25 @@ export interface FoundationRegisterPayload {
   description?: string;
   phone?: string;
   years?: number;
+  // Ubicación adicional
+  address?: string;
+  state?: string;
+  postal_code?: string;
+  // Contacto adicional
+  whatsapp?: string;
+  website?: string;
+  responsible?: string;
+  // Redes sociales
+  instagram?: string;
+  facebook?: string;
+  // Operación
+  schedule?: string;
+  references?: string;
+  vet_name?: string;
+  vet_phone?: string;
+  // Legal
+  legal_id?: string;
+  donation_clabe?: string;
 }
 
 export interface LoginPayload {
@@ -178,6 +221,25 @@ export interface AdminFoundationPatchPayload {
   years?:       number;
   email?:       string;
   status?:      FoundationStatusApi;
+  // Ubicación adicional
+  address?:     string | null;
+  state?:       string | null;
+  postal_code?: string | null;
+  // Contacto adicional
+  whatsapp?:       string | null;
+  website?:        string | null;
+  responsible?:    string | null;
+  // Redes sociales
+  instagram?:      string | null;
+  facebook?:       string | null;
+  // Operación
+  schedule?:       string | null;
+  references?:     string | null;
+  vet_name?:       string | null;
+  vet_phone?:      string | null;
+  // Legal
+  legal_id?:       string | null;
+  donation_clabe?: string | null;
 }
 
 export interface AdminAdopterPatchPayload {

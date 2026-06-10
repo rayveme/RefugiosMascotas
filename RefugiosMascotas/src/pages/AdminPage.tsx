@@ -9,6 +9,192 @@ import EditFoundationModal from '../components/admin/EditFoundationModal';
 import EditAdopterModal from '../components/admin/EditAdopterModal';
 import './AdminPage.css';
 
+/** Parsea la descripción concatenada por el formulario de registro.
+ *  Separa el texto libre de los metadatos estructurados (Tipo, Animales, Servicios, Capacidad). */
+function parseDescription(raw: string | null) {
+  if (!raw) return { text: null, tipo: null, animales: [], servicios: [], capacidad: null };
+  const META_KEYS = ['Tipo:', 'Animales:', 'Servicios:', 'Capacidad:'];
+  const lines = raw.split('\n');
+  const textLines: string[] = [];
+  let tipo: string | null = null;
+  let animales: string[] = [];
+  let servicios: string[] = [];
+  let capacidad: string | null = null;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('Tipo:'))      { tipo      = trimmed.replace('Tipo:', '').trim(); }
+    else if (trimmed.startsWith('Animales:'))   { animales  = trimmed.replace('Animales:', '').split(',').map(s => s.trim()).filter(Boolean); }
+    else if (trimmed.startsWith('Servicios:'))  { servicios = trimmed.replace('Servicios:', '').split(',').map(s => s.trim()).filter(Boolean); }
+    else if (trimmed.startsWith('Capacidad:'))  { capacidad = trimmed.replace('Capacidad:', '').trim(); }
+    else if (!META_KEYS.some(k => trimmed.startsWith(k))) { textLines.push(line); }
+  }
+  return { text: textLines.join('\n').trim() || null, tipo, animales, servicios, capacidad };
+}
+
+/** Fila expandible con el detalle completo de una fundación */
+function FoundationDetailRow({ f }: { f: AuthFoundation }) {
+  const [open, setOpen] = useState(false);
+
+  const parsed    = parseDescription(f.description);
+  const hasLocation = f.address || f.state || f.postalCode;
+  const hasSocial   = f.instagram || f.facebook || f.website;
+  const hasOps      = f.schedule || f.vetName || f.vetPhone || f.references;
+  const hasLegal    = f.legalId || f.donationClabe;
+  const photos      = f.refugePhotosUrls
+    ? f.refugePhotosUrls.split(',').filter(Boolean)
+    : [];
+  const hasDocs     = f.idFrontUrl || f.actaUrl || f.proofAddressUrl || photos.length > 0;
+
+  return (
+    <>
+      {open && (
+        <div className="admin-detail-panel">
+          <div className="admin-detail-grid">
+
+            {/* ── Contacto ── */}
+            <div className="admin-detail-section">
+              <h4 className="admin-detail-section__title">📞 Contacto</h4>
+              <ul className="admin-detail-list">
+                <li><span>Email</span><strong>{f.email}</strong></li>
+                {f.responsible && <li><span>Responsable</span><strong>{f.responsible}</strong></li>}
+                {f.phone       && <li><span>Teléfono</span><strong>{f.phone}</strong></li>}
+                {f.whatsapp    && <li><span>WhatsApp</span><strong>{f.whatsapp}</strong></li>}
+              </ul>
+            </div>
+
+            {/* ── Ubicación ── */}
+            {hasLocation && (
+              <div className="admin-detail-section">
+                <h4 className="admin-detail-section__title">📍 Ubicación</h4>
+                <ul className="admin-detail-list">
+                  {f.address    && <li><span>Dirección</span><strong>{f.address}</strong></li>}
+                  {f.city       && <li><span>Ciudad</span><strong>{f.city}</strong></li>}
+                  {f.state      && <li><span>Estado</span><strong>{f.state}</strong></li>}
+                  {f.postalCode && <li><span>C.P.</span><strong>{f.postalCode}</strong></li>}
+                </ul>
+              </div>
+            )}
+
+            {/* ── Sobre el refugio ── */}
+            <div className="admin-detail-section">
+              <h4 className="admin-detail-section__title">🏠 Sobre el refugio</h4>
+              <ul className="admin-detail-list">
+                <li><span>Años de operación</span><strong>{f.years} año{f.years !== 1 ? 's' : ''}</strong></li>
+                {parsed.tipo      && <li><span>Tipo de organización</span><strong>{parsed.tipo}</strong></li>}
+                {parsed.capacidad && <li><span>Capacidad</span><strong>{parsed.capacidad}</strong></li>}
+                {parsed.animales.length > 0 && (
+                  <li className="admin-detail-list__full">
+                    <span>Animales que atienden</span>
+                    <div className="admin-chips">
+                      {parsed.animales.map(a => <span key={a} className="admin-chip">{a}</span>)}
+                    </div>
+                  </li>
+                )}
+                {parsed.servicios.length > 0 && (
+                  <li className="admin-detail-list__full">
+                    <span>Servicios</span>
+                    <div className="admin-chips">
+                      {parsed.servicios.map(s => <span key={s} className="admin-chip">{s}</span>)}
+                    </div>
+                  </li>
+                )}
+                {parsed.text && (
+                  <li className="admin-detail-list__full">
+                    <span>Descripción</span>
+                    <p>{parsed.text}</p>
+                  </li>
+                )}
+              </ul>
+            </div>
+
+            {/* ── Redes sociales y web ── */}
+            {hasSocial && (
+              <div className="admin-detail-section">
+                <h4 className="admin-detail-section__title">🌐 Web y redes</h4>
+                <ul className="admin-detail-list">
+                  {f.website   && <li><span>Sitio web</span><a href={f.website} target="_blank" rel="noopener noreferrer">{f.website}</a></li>}
+                  {f.instagram && <li><span>Instagram</span><a href={f.instagram.startsWith('http') ? f.instagram : `https://instagram.com/${f.instagram.replace('@','')}`} target="_blank" rel="noopener noreferrer">{f.instagram}</a></li>}
+                  {f.facebook  && <li><span>Facebook</span><a href={f.facebook.startsWith('http') ? f.facebook : `https://facebook.com/${f.facebook}`} target="_blank" rel="noopener noreferrer">{f.facebook}</a></li>}
+                </ul>
+              </div>
+            )}
+
+            {/* ── Operación ── */}
+            {hasOps && (
+              <div className="admin-detail-section">
+                <h4 className="admin-detail-section__title">⚙️ Operación</h4>
+                <ul className="admin-detail-list">
+                  {f.schedule  && <li className="admin-detail-list__full"><span>Horario</span><p>{f.schedule}</p></li>}
+                  {f.vetName   && <li><span>Veterinario</span><strong>{f.vetName}</strong></li>}
+                  {f.vetPhone  && <li><span>Tel. veterinario</span><strong>{f.vetPhone}</strong></li>}
+                  {f.references && (
+                    <li className="admin-detail-list__full">
+                      <span>Referencias</span>
+                      <p style={{ whiteSpace: 'pre-line' }}>{f.references}</p>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
+
+            {/* ── Legal ── */}
+            {hasLegal && (
+              <div className="admin-detail-section">
+                <h4 className="admin-detail-section__title">⚖️ Legal</h4>
+                <ul className="admin-detail-list">
+                  {f.legalId       && <li><span>RFC / Registro</span><strong>{f.legalId}</strong></li>}
+                  {f.donationClabe && <li><span>CLABE donaciones</span><strong>{f.donationClabe}</strong></li>}
+                </ul>
+              </div>
+            )}
+
+            {/* ── Documentos ── */}
+            {hasDocs && (
+              <div className="admin-detail-section admin-detail-section--full">
+                <h4 className="admin-detail-section__title">📎 Documentos adjuntos</h4>
+                <div className="admin-docs-grid">
+                  {f.idFrontUrl && (
+                    <a className="admin-doc-card" href={f.idFrontUrl} target="_blank" rel="noopener noreferrer">
+                      <span className="admin-doc-card__icon">🪪</span>
+                      <span>Identificación del responsable</span>
+                    </a>
+                  )}
+                  {f.actaUrl && (
+                    <a className="admin-doc-card" href={f.actaUrl} target="_blank" rel="noopener noreferrer">
+                      <span className="admin-doc-card__icon">📋</span>
+                      <span>Acta constitutiva / Registro</span>
+                    </a>
+                  )}
+                  {f.proofAddressUrl && (
+                    <a className="admin-doc-card" href={f.proofAddressUrl} target="_blank" rel="noopener noreferrer">
+                      <span className="admin-doc-card__icon">🏠</span>
+                      <span>Comprobante de domicilio</span>
+                    </a>
+                  )}
+                  {photos.map((url, i) => (
+                    <a key={i} className="admin-doc-card admin-doc-card--photo" href={url} target="_blank" rel="noopener noreferrer">
+                      <img src={url} alt={`Foto del refugio ${i + 1}`} />
+                      <span>Foto {i + 1}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
+      <button
+        className="admin-row__toggle"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+      >
+        {open ? '▲ Ocultar detalles' : '▼ Ver detalles completos'}
+      </button>
+    </>
+  );
+}
+
 type Tab = 'pending' | 'foundations' | 'adopters' | 'pets';
 
 const TAB_LABEL: Record<Tab, string> = {
@@ -265,32 +451,38 @@ export default function AdminPage() {
           ) : (
             <ul className="admin-list">
               {pendingFoundations.map((f) => (
-                <li key={f.id} className="admin-row">
-                  <div className="admin-row__avatar" style={{ background: `linear-gradient(135deg, ${f.gradientFrom}, ${f.gradientTo})` }}>
-                    {f.initial}
+                <li key={f.id} className="admin-row admin-row--expandable">
+                  <div className="admin-row__top">
+                    <div className="admin-row__avatar" style={{ background: `linear-gradient(135deg, ${f.gradientFrom}, ${f.gradientTo})` }}>
+                      {f.initial}
+                    </div>
+                    <div className="admin-row__main">
+                      <strong>{f.name}</strong>
+                      <span className="admin-row__meta">📍 {f.city}{f.state ? `, ${f.state}` : ''} · {f.email}</span>
+                      {f.phone && <span className="admin-row__meta">📞 {f.phone}{f.whatsapp ? ` · WhatsApp: ${f.whatsapp}` : ''}</span>}
+                      {f.responsible && <span className="admin-row__meta">👤 Responsable: {f.responsible}</span>}
+                      {parseDescription(f.description).text && (
+                        <p className="admin-row__desc">"{parseDescription(f.description).text}"</p>
+                      )}
+                    </div>
+                    <div className="admin-row__actions">
+                      <button
+                        className="btn-ghost-danger"
+                        disabled={busyId === `f-${f.id}`}
+                        onClick={() => onRejectFoundation(f)}
+                      >
+                        Rechazar
+                      </button>
+                      <button
+                        className="btn-solid-success"
+                        disabled={busyId === `f-${f.id}`}
+                        onClick={() => onApproveFoundation(f)}
+                      >
+                        {busyId === `f-${f.id}` ? '…' : 'Aprobar'}
+                      </button>
+                    </div>
                   </div>
-                  <div className="admin-row__main">
-                    <strong>{f.name}</strong>
-                    <span className="admin-row__meta">📍 {f.city} · {f.email}</span>
-                    {f.phone && <span className="admin-row__meta">📞 {f.phone}</span>}
-                    {f.description && <p className="admin-row__desc">"{f.description}"</p>}
-                  </div>
-                  <div className="admin-row__actions">
-                    <button
-                      className="btn-ghost-danger"
-                      disabled={busyId === `f-${f.id}`}
-                      onClick={() => onRejectFoundation(f)}
-                    >
-                      Rechazar
-                    </button>
-                    <button
-                      className="btn-solid-success"
-                      disabled={busyId === `f-${f.id}`}
-                      onClick={() => onApproveFoundation(f)}
-                    >
-                      {busyId === `f-${f.id}` ? '…' : 'Aprobar'}
-                    </button>
-                  </div>
+                  <FoundationDetailRow f={f} />
                 </li>
               ))}
             </ul>
@@ -303,36 +495,39 @@ export default function AdminPage() {
           ) : (
             <ul className="admin-list">
               {foundations.map((f) => (
-                <li key={f.id} className="admin-row">
-                  <div className="admin-row__avatar" style={{ background: `linear-gradient(135deg, ${f.gradientFrom}, ${f.gradientTo})` }}>
-                    {f.initial}
-                  </div>
-                  <div className="admin-row__main">
-                    <strong>
-                      <Link to={`/refugios/${f.id}`}>{f.name}</Link>
-                    </strong>
-                    <span className="admin-row__meta">📍 {f.city} · {f.email}</span>
-                    <div className="admin-row__chips">
-                      <span className={`admin-status admin-status--${f.status}`}>{STATUS_LABEL[f.status]}</span>
-                      <span className="admin-row__meta">{f.animals} mascotas · {f.adoptions} adopciones</span>
+                <li key={f.id} className="admin-row admin-row--expandable">
+                  <div className="admin-row__top">
+                    <div className="admin-row__avatar" style={{ background: `linear-gradient(135deg, ${f.gradientFrom}, ${f.gradientTo})` }}>
+                      {f.initial}
+                    </div>
+                    <div className="admin-row__main">
+                      <strong>
+                        <Link to={`/refugios/${f.id}`}>{f.name}</Link>
+                      </strong>
+                      <span className="admin-row__meta">📍 {f.city}{f.state ? `, ${f.state}` : ''} · {f.email}</span>
+                      <div className="admin-row__chips">
+                        <span className={`admin-status admin-status--${f.status}`}>{STATUS_LABEL[f.status]}</span>
+                        <span className="admin-row__meta">{f.animals} mascotas · {f.adoptions} adopciones</span>
+                      </div>
+                    </div>
+                    <div className="admin-row__actions">
+                      <button
+                        className="btn-admin-edit"
+                        disabled={busyId === `f-${f.id}`}
+                        onClick={() => setEditingFoundation(f)}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        className="btn-ghost-danger"
+                        disabled={busyId === `f-${f.id}`}
+                        onClick={() => onDeleteFoundation(f)}
+                      >
+                        Eliminar
+                      </button>
                     </div>
                   </div>
-                  <div className="admin-row__actions">
-                    <button
-                      className="btn-admin-edit"
-                      disabled={busyId === `f-${f.id}`}
-                      onClick={() => setEditingFoundation(f)}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      className="btn-ghost-danger"
-                      disabled={busyId === `f-${f.id}`}
-                      onClick={() => onDeleteFoundation(f)}
-                    >
-                      Eliminar
-                    </button>
-                  </div>
+                  <FoundationDetailRow f={f} />
                 </li>
               ))}
             </ul>

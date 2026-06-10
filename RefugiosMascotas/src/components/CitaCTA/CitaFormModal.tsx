@@ -1,7 +1,8 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import Modal from '../ui/Modal/Modal';
 import FormField from '../ui/FormField/FormField';
-import { refugios } from '../../data/refugios';
+import { foundationsApi } from '../../api/foundations';
+import type { Refugio } from '../../types';
 import './CitaFormModal.css';
 
 interface Props {
@@ -46,6 +47,21 @@ export default function CitaFormModal({ open, onClose, onSubmitted }: Props) {
   const [form, setForm] = useState(initialState);
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
+  const [refugios, setRefugios] = useState<Refugio[]>([]);
+  const [loadingRefugios, setLoadingRefugios] = useState(false);
+
+  // Carga los refugios reales desde la API cuando se abre el modal
+  useEffect(() => {
+    if (!open) return;
+    let alive = true;
+    setLoadingRefugios(true);
+    foundationsApi
+      .list()
+      .then((data) => { if (alive) setRefugios(data); })
+      .catch(() => { /* silencioso — el select mostrará vacío */ })
+      .finally(() => { if (alive) setLoadingRefugios(false); });
+    return () => { alive = false; };
+  }, [open]);
 
   const set = (field: keyof typeof initialState) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
@@ -129,12 +145,20 @@ export default function CitaFormModal({ open, onClose, onSubmitted }: Props) {
             onChange={set('refugioId')}
             error={errors.refugioId}
           >
-            <option value="" disabled>Selecciona un refugio…</option>
-            {refugios.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name} — {r.city}
-              </option>
-            ))}
+            {loadingRefugios ? (
+              <option value="" disabled>Cargando refugios…</option>
+            ) : refugios.length === 0 ? (
+              <option value="" disabled>No hay refugios registrados aún</option>
+            ) : (
+              <>
+                <option value="" disabled>Selecciona un refugio…</option>
+                {refugios.map((r) => (
+                  <option key={r.id} value={String(r.id)}>
+                    {r.name} — {r.city}
+                  </option>
+                ))}
+              </>
+            )}
           </FormField>
 
           <FormField

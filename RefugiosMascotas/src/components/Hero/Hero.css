@@ -191,7 +191,7 @@
 .hero__sub {
   font-size: 1.1rem;
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.75);
+  color: #fff;
   max-width: 500px;
   line-height: 1.75;
   margin: 0 0 48px;
@@ -263,7 +263,7 @@
 
 .hero__stat-label {
   font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.85);
   letter-spacing: 0.04em;
 }
 

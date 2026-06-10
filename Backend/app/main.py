@@ -2,20 +2,70 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import func, select, text
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_settings
 from app.database import engine
-from app.models import Base
+from app.deps import SessionDep
+from app.models import Base, Foundation, FoundationStatus, Pet
 from app.routers import admin, adopters, adoptions, auth, foundations, pets
 
 settings = get_settings()
+
+# Columnas que deben existir pero pueden faltar en bases de datos creadas
+# antes de que se escribieran sus migraciones de Alembic.
+# Cada sentencia usa IF NOT EXISTS — es segura de correr en cada arranque.
+_ENSURE_COLUMNS = [
+    # Migración c9a8b7d6e5f4 — perfil del hogar y documentos del adoptante
+    "ALTER TABLE adopters ADD COLUMN IF NOT EXISTS housing_type    VARCHAR(50)",
+    "ALTER TABLE adopters ADD COLUMN IF NOT EXISTS has_garden      BOOLEAN",
+    "ALTER TABLE adopters ADD COLUMN IF NOT EXISTS has_children    BOOLEAN",
+    "ALTER TABLE adopters ADD COLUMN IF NOT EXISTS has_other_pets  BOOLEAN",
+    "ALTER TABLE adopters ADD COLUMN IF NOT EXISTS other_pets_desc VARCHAR(500)",
+    "ALTER TABLE adopters ADD COLUMN IF NOT EXISTS adoption_reason TEXT",
+    "ALTER TABLE adopters ADD COLUMN IF NOT EXISTS id_front_url      VARCHAR(500)",
+    "ALTER TABLE adopters ADD COLUMN IF NOT EXISTS id_back_url       VARCHAR(500)",
+    "ALTER TABLE adopters ADD COLUMN IF NOT EXISTS proof_address_url VARCHAR(500)",
+    "ALTER TABLE adopters ADD COLUMN IF NOT EXISTS home_photo_urls   VARCHAR(2000)",
+    "ALTER TABLE adopters ADD COLUMN IF NOT EXISTS signature_url     VARCHAR(500)",
+    # Migración 68d7bc9c7887 — public_id de imágenes de mascotas
+    "ALTER TABLE pets ADD COLUMN IF NOT EXISTS image_public_id VARCHAR(255)",
+    # Migración d3e4f5a6b7c8 — ubicación y contacto adicional de la fundación
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS address     VARCHAR(255)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS state       VARCHAR(80)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS postal_code VARCHAR(10)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS whatsapp    VARCHAR(30)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS website     VARCHAR(255)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS responsible VARCHAR(120)",
+    # Google OAuth — google_id en adoptantes y fundaciones
+    "ALTER TABLE adopters    ADD COLUMN IF NOT EXISTS google_id VARCHAR(64) UNIQUE",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS google_id VARCHAR(64) UNIQUE",
+    # Redes sociales, operación y datos legales de fundaciones
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS instagram       VARCHAR(255)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS facebook        VARCHAR(255)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS schedule        VARCHAR(500)",
+    'ALTER TABLE foundations ADD COLUMN IF NOT EXISTS "references"    VARCHAR(1000)',
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS vet_name        VARCHAR(120)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS vet_phone       VARCHAR(30)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS legal_id        VARCHAR(50)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS donation_clabe  VARCHAR(20)",
+    # Documentos de verificación del refugio
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS id_front_url       VARCHAR(500)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS acta_url           VARCHAR(500)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS proof_address_url  VARCHAR(500)",
+    "ALTER TABLE foundations ADD COLUMN IF NOT EXISTS refuge_photos_urls VARCHAR(2000)",
+]
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     async with engine.begin() as conn:
+        # Crea tablas nuevas que aún no existan (no toca las existentes)
         await conn.run_sync(Base.metadata.create_all)
+        # Agrega columnas faltantes de forma segura (idempotente)
+        for stmt in _ENSURE_COLUMNS:
+            await conn.execute(text(stmt))
     yield
     await engine.dispose()
 
@@ -42,3 +92,33 @@ app.include_router(admin.router)
 @app.get("/health", tags=["health"])
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/stats", tags=["public"])
+async def public_stats(session: SessionDep) -> dict[str, int]:
+    """Estadísticas públicas reales para el hero de la página principal."""
+    approved = Foundation.status == FoundationStatus.APPROVED
+
+    foundations_count = await session.scalar(
+        select(func.count(Foundation.id)).where(approved)
+    )
+    available_pets = await session.scalar(
+        select(func.count(Pet.id))
+        .join(Foundation)
+        .where(approved, Pet.is_adopted.is_(False))
+    )
+    adopted_pets = await session.scalar(
+        select(func.count(Pet.id))
+        .join(Foundation)
+        .where(approved, Pet.is_adopted.is_(True))
+    )
+    cities_count = await session.scalar(
+        select(func.count(Foundation.city.distinct())).where(approved)
+    )
+
+    return {
+        "foundations": foundations_count or 0,
+        "available_pets": available_pets or 0,
+        "adopted_pets": adopted_pets or 0,
+        "cities": cities_count or 0,
+    }
